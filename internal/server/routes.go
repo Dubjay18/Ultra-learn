@@ -1,6 +1,7 @@
 package server
 
 import (
+	"Ultra-learn/internal/services"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.GET("/", s.HelloWorldHandler)
 
 	r.GET("/health", s.healthHandler)
+
+	r.GET("/protected", services.AuthMiddleware(), s.protectedHandler)
 
 	return r
 }
@@ -25,4 +28,9 @@ func (s *Server) HelloWorldHandler(c *gin.Context) {
 
 func (s *Server) healthHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, s.db.Health())
+}
+
+func (s *Server) protectedHandler(c *gin.Context) {
+	UserID := c.GetString("USER_ID")
+	c.JSON(http.StatusOK, gin.H{"user_id": UserID})
 }
