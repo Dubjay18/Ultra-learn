@@ -1,6 +1,7 @@
 package server
 
 import (
+	"Ultra-learn/internal/dto"
 	"Ultra-learn/internal/services"
 	"net/http"
 
@@ -33,4 +34,16 @@ func (s *Server) healthHandler(c *gin.Context) {
 func (s *Server) protectedHandler(c *gin.Context) {
 	UserID := c.GetString("USER_ID")
 	c.JSON(http.StatusOK, gin.H{"user_id": UserID})
+}
+
+func (s *Server) registerUserHandler(c *gin.Context) {
+	var user dto.CreateUserRequest
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	s.authService.CreateUser(c, &user)
+
+	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
 }

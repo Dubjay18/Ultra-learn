@@ -15,7 +15,7 @@ type AuthService interface {
 }
 
 type DefaultauthService struct {
-	repo repository.UserRepository
+	repo *repository.UserRepository
 }
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -135,4 +135,10 @@ func (a *DefaultauthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
+}
+
+func NewAuthService(repo *repository.UserRepository) AuthService {
+	return &DefaultauthService{
+		repo: repo,
+	}
 }

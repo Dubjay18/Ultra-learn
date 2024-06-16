@@ -1,8 +1,8 @@
 package repository
 
 import (
+	"Ultra-learn/internal/database"
 	"Ultra-learn/internal/dto"
-	"database/sql"
 )
 
 type Role string
@@ -16,11 +16,11 @@ type User struct {
 }
 
 type UserRepository struct {
-	db *sql.DB
+	db *database.Service
 }
 
 func (r *UserRepository) CreateUser(user *dto.CreateUserRequest) error {
-	_, err := r.db.Exec("INSERT INTO users (first_name, last_name, email, password, role) VALUES ($1, $2, $3, $4, $5)", user.FirstName, user.LastName, user.Email, user.Password, user.Role)
+	_, err := r.db.Db.Exec("INSERT INTO users (first_name, last_name, email, password, role) VALUES ($1, $2, $3, $4, $5)", user.FirstName, user.LastName, user.Email, user.Password, user.Role)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func (r *UserRepository) CreateUser(user *dto.CreateUserRequest) error {
 
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository {
+func NewUserRepository(db *database.Service) *UserRepository {
 	return &UserRepository{
 		db: db,
 	}
