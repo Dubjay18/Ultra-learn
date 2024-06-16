@@ -14,7 +14,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.GET("/health", s.healthHandler)
 
-	r.GET("/protected", services.AuthMiddleware(), s.protectedHandler)
+	r.GET("/protected", services.AuthMiddleware(), services.AccessControlMiddleware([]string{"admin", "user"}), s.protectedHandler)
 
 	return r
 }
