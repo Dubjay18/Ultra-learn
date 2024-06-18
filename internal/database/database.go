@@ -54,8 +54,8 @@ func (s *Service) Health() map[string]string {
 	err := s.Db.PingContext(ctx)
 	if err != nil {
 		stats["status"] = "down"
-		stats["error"] = fmt.Sprintf("db down: %v", err)
-		log.Fatalf(fmt.Sprintf("db down: %v", err)) // Log the error and terminate the program
+		stats["errors"] = fmt.Sprintf("db down: %v", err)
+		log.Fatalf(fmt.Sprintf("db down: %v", err)) // Log the errors and terminate the program
 		return stats
 	}
 
@@ -96,7 +96,7 @@ func (s *Service) Health() map[string]string {
 // Close closes the database connection.
 // It logs a message indicating the disconnection from the specific database.
 // If the connection is successfully closed, it returns nil.
-// If an error occurs while closing the connection, it returns the error.
+// If an errors occurs while closing the connection, it returns the errors.
 func (s *Service) Close() error {
 	log.Printf("Disconnected from database: %s", database)
 	return s.Db.Close()

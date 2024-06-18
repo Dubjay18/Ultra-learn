@@ -2,6 +2,7 @@ package services
 
 import (
 	"Ultra-learn/internal/dto"
+	"Ultra-learn/internal/errors"
 	"Ultra-learn/internal/repository"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -11,7 +12,7 @@ import (
 )
 
 type AuthService interface {
-	CreateUser(c *gin.Context, user *dto.CreateUserRequest)
+	CreateUser(c *gin.Context, user *dto.CreateUserRequest) *errors.ApiError
 }
 
 type DefaultauthService struct {
@@ -22,19 +23,19 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenStr := c.GetHeader("Authorization")
 		if tokenStr == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
 			return
 		}
 		secretKey := os.Getenv("JWT_SECRET")
 		if secretKey == "" {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"errors": "Internal Server Error"})
 			return
 		}
 		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 			return []byte(secretKey), nil
 		})
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
 			return
 		}
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
@@ -42,11 +43,11 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Set("role", claims["role"])
 			c.Next()
 		} else {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
 			return
 		}
 		if !isLoggedIn(c) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
 			return
 		}
 		// Call the next handler
@@ -59,7 +60,7 @@ func AccessControlMiddleware(allowedRoles []string) gin.HandlerFunc {
 		// Check if the user has the required role
 		role := getUserRole(c)
 		if !isRoleAllowed(role, allowedRoles) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"errors": "Forbidden"})
 			return
 		}
 		// Call the next handler
@@ -115,26 +116,34 @@ func GenerateJWT(userID, role string) (string, error) {
 	return tokenString, nil
 }
 
-func (a *DefaultauthService) CreateUser(c *gin.Context, user *dto.CreateUserRequest) {
+func (a *DefaultauthService) CreateUser(c *gin.Context, user *dto.CreateUserRequest) *errors.ApiError {
 	// Get the user data from the request
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		return &errors.ApiError{
+			Message:    errors.ValidationError,
+			StatusCode: http.StatusBadRequest,
+		}
 	}
 	// Hash the user's password
 	hash, err := hashPassword(user.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
-		return
+		return &errors.ApiError{
+			Message:    errors.InternalServerError,
+			StatusCode: http.StatusInternalServerError,
+			Error:      err.Error(),
+		}
 	}
 	user.Password = hash
 	// Save the user to the database
 	err = a.repo.CreateUser(user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
-		return
+		return &errors.ApiError{
+			Message:    errors.InternalServerError,
+			StatusCode: http.StatusInternalServerError,
+			Error:      err.Error(),
+		}
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
+	return nil
 }
 
 func NewAuthService(repo *repository.UserRepository) AuthService {
