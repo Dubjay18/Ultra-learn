@@ -17,6 +17,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.GET("/protected", services.AuthMiddleware(), services.AccessControlMiddleware([]string{"admin", "user"}), s.protectedHandler)
 
+	r.Group("/api/v1").POST("/register", s.registerUserHandler)
+
 	return r
 }
 
