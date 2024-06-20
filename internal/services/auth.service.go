@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"os"
@@ -50,10 +51,11 @@ func GenerateJWT(userID string, role repository.Role) (string, error) {
 
 func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequest) *errors.ApiError {
 	// Get the user data from the request
-	if err := c.ShouldBindJSON(&user); err != nil {
+	if err := c.ShouldBindBodyWith(&user, binding.JSON); err != nil {
 		return &errors.ApiError{
 			Message:    errors.ValidationError,
 			StatusCode: http.StatusBadRequest,
+			Error:      err.Error(),
 		}
 	}
 	// Hash the user's password
@@ -92,6 +94,7 @@ func (a *DefaultAuthService) Login(c *gin.Context, user *dto.LoginRequest) (*dto
 		return nil, &errors.ApiError{
 			Message:    errors.ValidationError,
 			StatusCode: http.StatusBadRequest,
+			Error:      err.Error(),
 		}
 	}
 	// Get the user from the database
@@ -108,6 +111,7 @@ func (a *DefaultAuthService) Login(c *gin.Context, user *dto.LoginRequest) (*dto
 		return nil, &errors.ApiError{
 			Message:    errors.UnAuthorized,
 			StatusCode: http.StatusUnauthorized,
+			Error:      err.Error(),
 		}
 	}
 	// Generate a JWT token

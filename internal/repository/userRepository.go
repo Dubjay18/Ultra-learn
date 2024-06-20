@@ -21,7 +21,7 @@ type UserRepository struct {
 }
 
 func (r *UserRepository) CreateUser(user *User) error {
-	_, err := r.db.Exec("INSERT INTO users (first_name, last_name, email, password, role) VALUES ($1, $2, $3, $4, $5)", user.FirstName, user.LastName, user.Email, user.Password, user.Role)
+	_, err := r.db.Exec("INSERT INTO users (first_name, last_name, email, password, role,id,avatar) VALUES ($1, $2, $3, $4, $5,$6,$7)", user.FirstName, user.LastName, user.Email, user.Password, user.Role, user.ID, user.Avatar)
 	if err != nil {
 		return err
 	}

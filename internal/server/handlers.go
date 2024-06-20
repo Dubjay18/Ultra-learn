@@ -28,15 +28,7 @@ func (s *Server) HelloWorldHandler(c *gin.Context) {
 // Register user handler
 func (s *Server) registerUserHandler(c *gin.Context) {
 	var user dto.CreateUserRequest
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, errors.ApiError{
-			Message:    errors.ValidationError,
-			StatusCode: http.StatusBadRequest,
-			Error:      err.Error(),
-		})
-		return
 
-	}
 	err := s.authService.CreateUser(c, &user)
 	if err != nil {
 		// User creation failed

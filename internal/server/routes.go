@@ -17,7 +17,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	v1 := r.Group("/api/v1")
 	{
-		v1.POST("/register", s.registerUserHandler)
+		v1.POST("/auth/register", s.registerUserHandler)
+		v1.POST("/auth/login", s.signInUserHandler)
 	}
 
 	return r
