@@ -3,7 +3,9 @@ package services
 import (
 	"Ultra-learn/internal/dto"
 	"Ultra-learn/internal/errors"
+	"Ultra-learn/internal/helper"
 	"Ultra-learn/internal/repository"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -64,8 +66,16 @@ func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 		}
 	}
 	user.Password = hash
+
 	// Save the user to the database
-	err = a.repo.CreateUser(user)
+	err = a.repo.CreateUser(&repository.User{FirstName: user.FirstName,
+		Email:    user.Email,
+		Password: user.Password,
+		LastName: user.LastName,
+		Role:     "user",
+		Avatar:   fmt.Sprintf("https://eu.ui-avatars.com/api/?name=%v+%v&size=250", user.FirstName, user.LastName),
+		ID:       helper.GenerateUserId(),
+	})
 	if err != nil {
 		return &errors.ApiError{
 			Message:    errors.InternalServerError,
