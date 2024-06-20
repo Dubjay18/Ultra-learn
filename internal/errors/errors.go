@@ -3,6 +3,7 @@ package errors
 const (
 	ValidationError     = "Bad request"
 	InternalServerError = "Something went wrong"
+	UnAuthorized        = "Unauthorized"
 )
 
 type ApiError struct {

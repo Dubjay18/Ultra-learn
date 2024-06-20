@@ -8,6 +8,7 @@ import (
 type Role string
 
 type User struct {
+	ID        string `json:"id"db:"id"`
 	FirstName string `json:"firstName"db:"first_name"`
 	LastName  string `json:"lastName"db:"last_name"`
 	Email     string `json:"email"db:"email"`
@@ -25,6 +26,16 @@ func (r *UserRepository) CreateUser(user *dto.CreateUserRequest) error {
 		return err
 	}
 	return nil
+
+}
+
+func (r *UserRepository) GetUserByEmail(email string) (*User, error) {
+	var user User
+	err := r.db.QueryRow("SELECT first_name, last_name, email, password, role FROM users WHERE email = $1", email).Scan(&user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Role)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 
 }
 

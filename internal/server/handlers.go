@@ -47,3 +47,22 @@ func (s *Server) registerUserHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
 
 }
+
+// Sign in user handler
+func (s *Server) signInUserHandler(c *gin.Context) {
+	var user dto.LoginRequest
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, errors.ApiError{
+			Message:    errors.ValidationError,
+			StatusCode: http.StatusBadRequest,
+			Error:      err.Error(),
+		})
+		return
+	}
+	resp, err := s.authService.Login(c, &user)
+	if err != nil {
+		c.JSON(err.StatusCode, err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}

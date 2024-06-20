@@ -13,6 +13,7 @@ import (
 
 type AuthService interface {
 	CreateUser(c *gin.Context, user *dto.CreateUserRequest) *errors.ApiError
+	Login(c *gin.Context, user *dto.LoginRequest) (*dto.LoginResponse, *errors.ApiError)
 }
 
 type DefaultAuthService struct {
@@ -27,12 +28,12 @@ func hashPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
-func verrifyPassword(password, hash string) bool {
+func verifyPassword(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
 
-func GenerateJWT(userID, role string) (string, error) {
+func GenerateJWT(userID string, role repository.Role) (string, error) {
 	secretKey := os.Getenv("JWT_SECRET")
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"USER_ID": userID,
@@ -73,6 +74,42 @@ func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 		}
 	}
 	return nil
+}
+
+func (a *DefaultAuthService) Login(c *gin.Context, user *dto.LoginRequest) (*dto.LoginResponse, *errors.ApiError) {
+	// Get the user data from the request
+	if err := c.ShouldBindJSON(&user); err != nil {
+		return nil, &errors.ApiError{
+			Message:    errors.ValidationError,
+			StatusCode: http.StatusBadRequest,
+		}
+	}
+	// Get the user from the database
+	u, err := a.repo.GetUserByEmail(user.Email)
+	if err != nil {
+		return nil, &errors.ApiError{
+			Message:    errors.InternalServerError,
+			StatusCode: http.StatusInternalServerError,
+			Error:      err.Error(),
+		}
+	}
+	// Verify the user's password
+	if !verifyPassword(user.Password, u.Password) {
+		return nil, &errors.ApiError{
+			Message:    errors.UnAuthorized,
+			StatusCode: http.StatusUnauthorized,
+		}
+	}
+	// Generate a JWT token
+	token, err := GenerateJWT(u.ID, u.Role)
+	if err != nil {
+		return nil, &errors.ApiError{
+			Message:    errors.InternalServerError,
+			StatusCode: http.StatusInternalServerError,
+			Error:      err.Error(),
+		}
+	}
+	return &dto.LoginResponse{Token: token}, nil
 }
 
 func NewAuthService(repo *repository.UserRepository) AuthService {
