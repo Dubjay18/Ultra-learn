@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"os"
+	"time"
 )
 
 type AuthService interface {
@@ -38,9 +39,11 @@ func verifyPassword(password, hash string) bool {
 
 func GenerateJWT(userID string, role repository.Role) (string, error) {
 	secretKey := os.Getenv("JWT_SECRET")
+	expirationTime := time.Now().Add(1 * time.Hour).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"USER_ID": userID,
 		"role":    role,
+		"exp":     expirationTime,
 	})
 	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {

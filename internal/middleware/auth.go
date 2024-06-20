@@ -1,10 +1,12 @@
 package middleware
 
 import (
+	"Ultra-learn/internal/errors"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
+	"time"
 )
 
 func isLoggedIn(c *gin.Context) bool {
@@ -48,7 +50,24 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
 			return
 		}
+
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			if exp, ok := claims["exp"].(float64); ok {
+				if time.Now().Unix() > int64(exp) {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, errors.ApiError{Message: "Token has expired",
+						Error:      err.Error(),
+						StatusCode: http.StatusUnauthorized,
+					})
+					return
+				}
+			} else {
+				c.AbortWithStatusJSON(http.StatusBadRequest, errors.ApiError{
+					Message:    "Invalid token",
+					Error:      err.Error(),
+					StatusCode: http.StatusBadRequest,
+				})
+				return
+			}
 			c.Set("USER_ID", claims["USER_ID"])
 			c.Set("role", claims["role"])
 			c.Next()
