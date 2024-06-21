@@ -8,7 +8,7 @@ const (
 )
 
 type ApiError struct {
-	StatusCode int    `json:"statusCode"`
+	StatusCode int    `json:"status_code"`
 	Error      any    `json:"error"`
 	Message    string `json:"message"`
 }

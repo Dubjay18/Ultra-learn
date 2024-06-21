@@ -12,14 +12,22 @@ func (s *Server) healthHandler(c *gin.Context) {
 
 func (s *Server) protectedHandler(c *gin.Context) {
 	UserID, _ := c.Get("USER_ID")
-	c.JSON(http.StatusOK, gin.H{"user_id": UserID})
+	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
+		Message:    "Protected route",
+		Data:       gin.H{"USER_ID": UserID},
+		StatusCode: http.StatusOK,
+	})
 }
 
 func (s *Server) HelloWorldHandler(c *gin.Context) {
 	resp := make(map[string]string)
 	resp["message"] = "Hello World"
 
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
+		Message:    "Hello World",
+		Data:       resp,
+		StatusCode: http.StatusOK,
+	})
 }
 
 // auth handlers
@@ -33,7 +41,11 @@ func (s *Server) registerUserHandler(c *gin.Context) {
 		c.JSON(err.StatusCode, err)
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
+	c.JSON(http.StatusCreated,
+		dto.ApiSuccessResponse{
+			Message:    "User created successfully",
+			StatusCode: http.StatusCreated,
+		})
 
 }
 
@@ -45,7 +57,11 @@ func (s *Server) signInUserHandler(c *gin.Context) {
 		c.JSON(err.StatusCode, err)
 		return
 	}
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
+		Message:    "User logged in successfully",
+		Data:       resp,
+		StatusCode: http.StatusOK,
+	})
 }
 
 // user handlers
@@ -58,5 +74,9 @@ func (s *Server) getUserDetailsHandler(c *gin.Context) {
 		c.JSON(err.StatusCode, err)
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
+		Message:    "User details retrieved successfully",
+		Data:       user,
+		StatusCode: http.StatusOK,
+	})
 }
