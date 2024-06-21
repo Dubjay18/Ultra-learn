@@ -98,7 +98,10 @@ func AccessControlMiddleware(allowedRoles []string) gin.HandlerFunc {
 		// Check if the user has the required role
 		role := getUserRole(c)
 		if !isRoleAllowed(role, allowedRoles) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"errors": "Forbidden"})
+			c.AbortWithStatusJSON(http.StatusForbidden, errors.ApiError{Message: "Forbidden",
+				Error:      "You do not have permission to access this resource",
+				StatusCode: http.StatusForbidden,
+			})
 			return
 		}
 		// Call the next handler
