@@ -34,19 +34,27 @@ func isRoleAllowed(role string, allowedRoles []string) bool {
 func AuthMiddleware(c *gin.Context) {
 	tokenStr := c.GetHeader("Authorization")
 	if tokenStr == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, errors.ApiError{Message: "Unauthorized",
+			Error:      "Token is required",
+			StatusCode: http.StatusUnauthorized,
+		})
 		return
 	}
 	secretKey := os.Getenv("JWT_SECRET")
 	if secretKey == "" {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"errors": "Internal Server Error"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, errors.ApiError{Message: "Internal server error",
+			StatusCode: http.StatusInternalServerError,
+		})
 		return
 	}
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, errors.ApiError{Message: "Unauthorized",
+			Error:      err.Error(),
+			StatusCode: http.StatusUnauthorized,
+		})
 		return
 	}
 
@@ -71,7 +79,10 @@ func AuthMiddleware(c *gin.Context) {
 		c.Set("role", claims["role"])
 
 	} else {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, errors.ApiError{Message: "Unauthorized",
+			Error:      err.Error(),
+			StatusCode: http.StatusUnauthorized,
+		})
 		return
 	}
 	//if !isLoggedIn(c) {
