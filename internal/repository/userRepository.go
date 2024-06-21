@@ -31,7 +31,7 @@ func (r *UserRepository) CreateUser(user *User) error {
 
 func (r *UserRepository) GetUserByEmail(email string) (*User, error) {
 	var user User
-	err := r.db.QueryRow("SELECT first_name, last_name, email, password, role FROM users WHERE email = $1", email).Scan(&user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Role)
+	err := r.db.QueryRow("SELECT first_name, last_name, email, password, role,id,avatar FROM users WHERE email = $1", email).Scan(&user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Role, &user.ID, &user.Avatar)
 	if err != nil {
 		return nil, err
 	}

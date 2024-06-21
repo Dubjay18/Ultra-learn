@@ -13,7 +13,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.GET("/health", s.healthHandler)
 
-	r.GET("/protected", middleware.AuthMiddleware(), middleware.AccessControlMiddleware([]string{"admin", "user"}), s.protectedHandler)
+	r.GET("/protected", middleware.AuthMiddleware, middleware.AccessControlMiddleware([]string{"admin", "user"}), s.protectedHandler)
 
 	v1 := r.Group("/api/v1")
 	{

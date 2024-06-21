@@ -31,58 +31,57 @@ func isRoleAllowed(role string, allowedRoles []string) bool {
 	return false
 }
 
-func AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenStr := c.GetHeader("Authorization")
-		if tokenStr == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
-			return
-		}
-		secretKey := os.Getenv("JWT_SECRET")
-		if secretKey == "" {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"errors": "Internal Server Error"})
-			return
-		}
-		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-			return []byte(secretKey), nil
-		})
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
-			return
-		}
+func AuthMiddleware(c *gin.Context) {
+	tokenStr := c.GetHeader("Authorization")
+	if tokenStr == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
+		return
+	}
+	secretKey := os.Getenv("JWT_SECRET")
+	if secretKey == "" {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"errors": "Internal Server Error"})
+		return
+	}
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secretKey), nil
+	})
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
+		return
+	}
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			if exp, ok := claims["exp"].(float64); ok {
-				if time.Now().Unix() > int64(exp) {
-					c.AbortWithStatusJSON(http.StatusUnauthorized, errors.ApiError{Message: "Token has expired",
-						Error:      err.Error(),
-						StatusCode: http.StatusUnauthorized,
-					})
-					return
-				}
-			} else {
-				c.AbortWithStatusJSON(http.StatusBadRequest, errors.ApiError{
-					Message:    "Invalid token",
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if exp, ok := claims["exp"].(float64); ok {
+			if time.Now().Unix() > int64(exp) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, errors.ApiError{Message: "Token has expired",
 					Error:      err.Error(),
-					StatusCode: http.StatusBadRequest,
+					StatusCode: http.StatusUnauthorized,
 				})
 				return
 			}
-			c.Set("USER_ID", claims["USER_ID"])
-			c.Set("role", claims["role"])
-			c.Next()
 		} else {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
+			c.AbortWithStatusJSON(http.StatusBadRequest, errors.ApiError{
+				Message:    "Invalid token",
+				Error:      err.Error(),
+				StatusCode: http.StatusBadRequest,
+			})
 			return
 		}
-		if !isLoggedIn(c) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
-			return
-		}
-		// Call the next handler
-		c.Next()
+		c.Set("USER_ID", claims["USER_ID"])
+		c.Set("role", claims["role"])
+
+	} else {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
+		return
 	}
+	//if !isLoggedIn(c) {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Unauthorized"})
+	//	return
+	//}
+	// Call the next handler
+	c.Next()
 }
+
 func AccessControlMiddleware(allowedRoles []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Check if the user has the required role
