@@ -18,6 +18,7 @@ type Server struct {
 	port        int
 	db          *database.Service
 	authService services.AuthService
+	userService services.UserService
 }
 
 func NewServer() *http.Server {
@@ -26,10 +27,12 @@ func NewServer() *http.Server {
 
 	userRepo := repository.NewUserRepository(dbInstance.Db) // Pass the dbInstance to the UserRepository
 	authService := services.NewAuthService(userRepo)        // Pass the UserRepository to the AuthService
+	userService := services.NewUserService(userRepo)        // Pass the UserRepository to the UserService
 	NewServer := &Server{
 		port:        port,
 		db:          dbInstance,
 		authService: authService,
+		userService: userService,
 	}
 	// Declare Server config
 	server := &http.Server{

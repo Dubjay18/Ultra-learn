@@ -4,6 +4,7 @@ const (
 	ValidationError     = "Bad request"
 	InternalServerError = "Something went wrong"
 	UnAuthorized        = "Unauthorized"
+	UserNotFound        = "User not found"
 )
 
 type ApiError struct {

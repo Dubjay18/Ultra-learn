@@ -21,7 +21,7 @@ type AuthService interface {
 }
 
 type DefaultAuthService struct {
-	repo *repository.UserRepository
+	repo *repository.DefaultUserRepository
 }
 
 func hashPassword(password string) (string, error) {
@@ -129,7 +129,7 @@ func (a *DefaultAuthService) Login(c *gin.Context, user *dto.LoginRequest) (*dto
 	return &dto.LoginResponse{Token: token}, nil
 }
 
-func NewAuthService(repo *repository.UserRepository) AuthService {
+func NewAuthService(repo *repository.DefaultUserRepository) AuthService {
 	return &DefaultAuthService{
 		repo: repo,
 	}

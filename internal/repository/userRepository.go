@@ -16,11 +16,16 @@ type User struct {
 	Role      Role   `json:"role"db:"role"`
 }
 
-type UserRepository struct {
+type UserRepository interface {
+	CreateUser(user *User) error
+	GetUserByEmail(email string) (*User, error)
+	GetUserByID(id string) (*User, error)
+}
+type DefaultUserRepository struct {
 	db *sql.DB
 }
 
-func (r *UserRepository) CreateUser(user *User) error {
+func (r *DefaultUserRepository) CreateUser(user *User) error {
 	_, err := r.db.Exec("INSERT INTO users (first_name, last_name, email, password, role,id,avatar) VALUES ($1, $2, $3, $4, $5,$6,$7)", user.FirstName, user.LastName, user.Email, user.Password, user.Role, user.ID, user.Avatar)
 	if err != nil {
 		return err
@@ -29,7 +34,7 @@ func (r *UserRepository) CreateUser(user *User) error {
 
 }
 
-func (r *UserRepository) GetUserByEmail(email string) (*User, error) {
+func (r *DefaultUserRepository) GetUserByEmail(email string) (*User, error) {
 	var user User
 	err := r.db.QueryRow("SELECT first_name, last_name, email, password, role,id,avatar FROM users WHERE email = $1", email).Scan(&user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Role, &user.ID, &user.Avatar)
 	if err != nil {
@@ -39,8 +44,18 @@ func (r *UserRepository) GetUserByEmail(email string) (*User, error) {
 
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{
+func (r *DefaultUserRepository) GetUserByID(id string) (*User, error) {
+	var user User
+	err := r.db.QueryRow("SELECT first_name, last_name, email, password, role,id,avatar FROM users WHERE id = $1", id).Scan(&user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Role, &user.ID, &user.Avatar)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+
+}
+
+func NewUserRepository(db *sql.DB) *DefaultUserRepository {
+	return &DefaultUserRepository{
 		db: db,
 	}
 }

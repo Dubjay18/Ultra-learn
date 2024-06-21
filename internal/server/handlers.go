@@ -27,14 +27,12 @@ func (s *Server) HelloWorldHandler(c *gin.Context) {
 // Register user handler
 func (s *Server) registerUserHandler(c *gin.Context) {
 	var user dto.CreateUserRequest
-
 	err := s.authService.CreateUser(c, &user)
 	if err != nil {
 		// User creation failed
 		c.JSON(err.StatusCode, err)
 		return
 	}
-
 	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
 
 }
@@ -42,11 +40,23 @@ func (s *Server) registerUserHandler(c *gin.Context) {
 // Sign in user handler
 func (s *Server) signInUserHandler(c *gin.Context) {
 	var user dto.LoginRequest
-
 	resp, err := s.authService.Login(c, &user)
 	if err != nil {
 		c.JSON(err.StatusCode, err)
 		return
 	}
 	c.JSON(http.StatusOK, resp)
+}
+
+// user handlers
+// ...
+// Get user details handler
+func (s *Server) getUserDetailsHandler(c *gin.Context) {
+	userID := c.GetString("USER_ID")
+	user, err := s.userService.GetUserDetails(userID)
+	if err != nil {
+		c.JSON(err.StatusCode, err)
+		return
+	}
+	c.JSON(http.StatusOK, user)
 }
