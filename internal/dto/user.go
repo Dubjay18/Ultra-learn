@@ -8,3 +8,9 @@ type UserDetailsResponse struct {
 	Avatar    string `json:"avatar"`
 	Role      string `json:"role"`
 }
+type UpdateUserRequest struct {
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
+	Email     string `json:"email,omitempty"`
+	Avatar    string `json:"avatar,omitempty"`
+}

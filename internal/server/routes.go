@@ -23,6 +23,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		ar.POST("/register", s.registerUserHandler)
 		ar.POST("/login", s.signInUserHandler)
 		ur.GET("/details", s.getUserDetailsHandler)
+		ur.PUT("/details", s.updateUserDetailsHandler)
 	}
 
 	return r

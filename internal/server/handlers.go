@@ -2,7 +2,9 @@ package server
 
 import (
 	"Ultra-learn/internal/dto"
+	"Ultra-learn/internal/errors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"net/http"
 )
 
@@ -77,6 +79,58 @@ func (s *Server) getUserDetailsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
 		Message:    "User details retrieved successfully",
 		Data:       user,
+		StatusCode: http.StatusOK,
+	})
+}
+
+// Update user details handler
+func (s *Server) updateUserDetailsHandler(c *gin.Context) {
+	userID := c.GetString("USER_ID")
+
+	var user dto.UpdateUserRequest
+	var jsonData map[string]interface{}
+
+	if err := c.ShouldBindBodyWith(&jsonData, binding.JSON); err != nil {
+		c.JSON(http.StatusBadRequest, errors.ApiError{
+			Message:    "Invalid request",
+			Error:      err.Error(),
+			StatusCode: http.StatusBadRequest,
+		})
+		return
+	}
+
+	for key := range jsonData {
+		switch key {
+		case "first_name", "last_name", "email", "avatar":
+			continue
+		default:
+			c.JSON(http.StatusBadRequest, errors.ApiError{
+				Message:    "Invalid request",
+				Error:      "Unexpected field " + key,
+				StatusCode: http.StatusBadRequest,
+			})
+			return
+		}
+	}
+
+	if err := c.ShouldBindBodyWith(&user, binding.JSON); err != nil {
+		c.JSON(http.StatusBadRequest, errors.ApiError{
+			Message:    "Invalid request",
+			Error:      err.Error(),
+			StatusCode: http.StatusBadRequest,
+		})
+		return
+	}
+
+	userDetails, err := s.userService.UpdateUserDetails(userID, &user)
+	if err != nil {
+		c.JSON(err.StatusCode, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
+		Message:    "User details updated successfully",
+		Data:       userDetails,
 		StatusCode: http.StatusOK,
 	})
 }

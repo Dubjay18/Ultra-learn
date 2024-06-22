@@ -54,6 +54,14 @@ func (r *DefaultUserRepository) GetUserByID(id string) (*User, error) {
 
 }
 
+func (r *DefaultUserRepository) UpdateUser(user *User) error {
+	_, err := r.db.Exec("UPDATE users SET first_name = $1, last_name = $2, email = $3, password = $4, role = $5,avatar=$6 WHERE id = $7", user.FirstName, user.LastName, user.Email, user.Password, user.Role, user.Avatar, user.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func NewUserRepository(db *sql.DB) *DefaultUserRepository {
 	return &DefaultUserRepository{
 		db: db,
