@@ -114,7 +114,7 @@ func (a *DefaultAuthService) Login(c *gin.Context, user *dto.LoginRequest) (*dto
 		return nil, &errors.ApiError{
 			Message:    errors.UnAuthorized,
 			StatusCode: http.StatusUnauthorized,
-			Error:      err.Error(),
+			Error:      "Invalid email or password",
 		}
 	}
 	// Generate a JWT token

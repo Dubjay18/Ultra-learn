@@ -20,6 +20,8 @@ type UserRepository interface {
 	CreateUser(user *User) error
 	GetUserByEmail(email string) (*User, error)
 	GetUserByID(id string) (*User, error)
+	UpdateUser(user *User) error
+	UpdateAvatar(id string, avatar string) error
 }
 type DefaultUserRepository struct {
 	db *sql.DB
@@ -56,6 +58,14 @@ func (r *DefaultUserRepository) GetUserByID(id string) (*User, error) {
 
 func (r *DefaultUserRepository) UpdateUser(user *User) error {
 	_, err := r.db.Exec("UPDATE users SET first_name = $1, last_name = $2, email = $3, password = $4, role = $5,avatar=$6 WHERE id = $7", user.FirstName, user.LastName, user.Email, user.Password, user.Role, user.Avatar, user.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *DefaultUserRepository) UpdateAvatar(id string, avatar string) error {
+	_, err := r.db.Exec("UPDATE users SET avatar = $1 WHERE id = $2", avatar, id)
 	if err != nil {
 		return err
 	}

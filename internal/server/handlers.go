@@ -134,3 +134,28 @@ func (s *Server) updateUserDetailsHandler(c *gin.Context) {
 		StatusCode: http.StatusOK,
 	})
 }
+
+func (s *Server) updateAvatarHandler(c *gin.Context) {
+	userID := c.GetString("USER_ID")
+	file, _, fileErr := c.Request.FormFile("avatar")
+	if fileErr != nil {
+		c.JSON(http.StatusBadRequest, errors.ApiError{
+			Message:    "Invalid request",
+			Error:      fileErr.Error(),
+			StatusCode: http.StatusBadRequest,
+		})
+		return
+	}
+
+	avatarUrl, err := s.userService.UpdateAvatar(userID, file, c)
+	if err != nil {
+		c.JSON(err.StatusCode, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
+		Message:    "Avatar updated successfully",
+		StatusCode: http.StatusOK,
+		Data:       avatarUrl,
+	})
+}
