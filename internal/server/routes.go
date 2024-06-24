@@ -13,18 +13,18 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.GET("/health", s.healthHandler)
 
-	r.GET("/protected", middleware.AuthMiddleware, middleware.AccessControlMiddleware([]string{"admin", "user"}), s.protectedHandler)
+	r.GET("/protected", middleware.AuthMiddleware, middleware.AccessControlMiddleware([]string{"admin", "user"}), s.ProtectedHandler)
 
 	v1 := r.Group("/api/v1")
 	ar := v1.Group("/auth")
 	ur := v1.Group("/user", middleware.AuthMiddleware, middleware.AccessControlMiddleware([]string{"admin", "user"}))
 	{
 
-		ar.POST("/register", s.registerUserHandler)
-		ar.POST("/login", s.signInUserHandler)
-		ur.GET("/details", s.getUserDetailsHandler)
-		ur.PUT("/details", s.updateUserDetailsHandler)
-		ur.POST("/avatar", s.updateAvatarHandler)
+		ar.POST("/register", s.RegisterUserHandler)
+		ar.POST("/login", s.SignInUserHandler)
+		ur.GET("/details", s.GetUserDetailsHandler)
+		ur.PUT("/details", s.UpdateUserDetailsHandler)
+		ur.POST("/avatar", s.UpdateAvatarHandler)
 	}
 
 	return r

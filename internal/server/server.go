@@ -15,10 +15,10 @@ import (
 )
 
 type Server struct {
-	port        int
-	db          *database.Service
-	authService services.AuthService
-	userService services.UserService
+	Port        int
+	Db          *database.Service
+	AuthService services.AuthService
+	UserService services.UserService
 }
 
 func NewServer() *http.Server {
@@ -29,14 +29,14 @@ func NewServer() *http.Server {
 	authService := services.NewAuthService(userRepo)        // Pass the UserRepository to the AuthService
 	userService := services.NewUserService(userRepo)        // Pass the UserRepository to the UserService
 	NewServer := &Server{
-		port:        port,
-		db:          dbInstance,
-		authService: authService,
-		userService: userService,
+		Port:        port,
+		Db:          dbInstance,
+		AuthService: authService,
+		UserService: userService,
 	}
 	// Declare Server config
 	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", NewServer.port),
+		Addr:         fmt.Sprintf(":%d", NewServer.Port),
 		Handler:      NewServer.RegisterRoutes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,

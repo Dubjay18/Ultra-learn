@@ -1,5 +1,6 @@
 package server
 
+import "C"
 import (
 	"Ultra-learn/internal/dto"
 	"Ultra-learn/internal/errors"
@@ -9,10 +10,10 @@ import (
 )
 
 func (s *Server) healthHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, s.db.Health())
+	c.JSON(http.StatusOK, s.Db.Health())
 }
 
-func (s *Server) protectedHandler(c *gin.Context) {
+func (s *Server) ProtectedHandler(c *gin.Context) {
 	UserID, _ := c.Get("USER_ID")
 	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
 		Message:    "Protected route",
@@ -35,12 +36,22 @@ func (s *Server) HelloWorldHandler(c *gin.Context) {
 // auth handlers
 // ...
 // Register user handler
-func (s *Server) registerUserHandler(c *gin.Context) {
+func (s *Server) RegisterUserHandler(c *gin.Context) {
+	if s.AuthService == nil {
+		c.JSON(http.StatusInternalServerError, errors.ApiError{
+			Message:    "Internal server error",
+			Error:      "AuthService is not initialized",
+			StatusCode: http.StatusInternalServerError,
+		})
+		return
+	}
 	var user dto.CreateUserRequest
-	err := s.authService.CreateUser(c, &user)
+	err := s.AuthService.CreateUser(c, &user)
 	if err != nil {
 		// User creation failed
-		c.JSON(err.StatusCode, err)
+		c.JSON(
+			err.StatusCode,
+			err)
 		return
 	}
 	c.JSON(http.StatusCreated,
@@ -52,9 +63,17 @@ func (s *Server) registerUserHandler(c *gin.Context) {
 }
 
 // Sign in user handler
-func (s *Server) signInUserHandler(c *gin.Context) {
+func (s *Server) SignInUserHandler(c *gin.Context) {
+	if s.AuthService == nil {
+		c.JSON(http.StatusInternalServerError, errors.ApiError{
+			Message:    "Internal server error",
+			Error:      "AuthService is not initialized",
+			StatusCode: http.StatusInternalServerError,
+		})
+		return
+	}
 	var user dto.LoginRequest
-	resp, err := s.authService.Login(c, &user)
+	resp, err := s.AuthService.Login(c, &user)
 	if err != nil {
 		c.JSON(err.StatusCode, err)
 		return
@@ -69,9 +88,17 @@ func (s *Server) signInUserHandler(c *gin.Context) {
 // user handlers
 // ...
 // Get user details handler
-func (s *Server) getUserDetailsHandler(c *gin.Context) {
+func (s *Server) GetUserDetailsHandler(c *gin.Context) {
+	if s.AuthService == nil {
+		c.JSON(http.StatusInternalServerError, errors.ApiError{
+			Message:    "Internal server error",
+			Error:      "AuthService is not initialized",
+			StatusCode: http.StatusInternalServerError,
+		})
+		return
+	}
 	userID := c.GetString("USER_ID")
-	user, err := s.userService.GetUserDetails(userID)
+	user, err := s.UserService.GetUserDetails(userID)
 	if err != nil {
 		c.JSON(err.StatusCode, err)
 		return
@@ -84,7 +111,7 @@ func (s *Server) getUserDetailsHandler(c *gin.Context) {
 }
 
 // Update user details handler
-func (s *Server) updateUserDetailsHandler(c *gin.Context) {
+func (s *Server) UpdateUserDetailsHandler(c *gin.Context) {
 	userID := c.GetString("USER_ID")
 
 	var user dto.UpdateUserRequest
@@ -122,7 +149,7 @@ func (s *Server) updateUserDetailsHandler(c *gin.Context) {
 		return
 	}
 
-	userDetails, err := s.userService.UpdateUserDetails(userID, &user)
+	userDetails, err := s.UserService.UpdateUserDetails(userID, &user)
 	if err != nil {
 		c.JSON(err.StatusCode, err)
 		return
@@ -135,7 +162,7 @@ func (s *Server) updateUserDetailsHandler(c *gin.Context) {
 	})
 }
 
-func (s *Server) updateAvatarHandler(c *gin.Context) {
+func (s *Server) UpdateAvatarHandler(c *gin.Context) {
 	userID := c.GetString("USER_ID")
 	file, _, fileErr := c.Request.FormFile("avatar")
 	if fileErr != nil {
@@ -147,7 +174,7 @@ func (s *Server) updateAvatarHandler(c *gin.Context) {
 		return
 	}
 
-	avatarUrl, err := s.userService.UpdateAvatar(userID, file, c)
+	avatarUrl, err := s.UserService.UpdateAvatar(userID, file, c)
 	if err != nil {
 		c.JSON(err.StatusCode, err)
 		return
