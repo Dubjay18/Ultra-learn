@@ -1,12 +1,12 @@
 package server
 
-import "C"
 import (
 	"Ultra-learn/internal/dto"
 	"Ultra-learn/internal/errors"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"net/http"
 )
 
 func (s *Server) healthHandler(c *gin.Context) {
@@ -45,7 +45,7 @@ func (s *Server) RegisterUserHandler(c *gin.Context) {
 		})
 		return
 	}
-	var user dto.CreateUserRequest
+	user := dto.CreateUserRequest{}
 	err := s.AuthService.CreateUser(c, &user)
 	if err != nil {
 		// User creation failed

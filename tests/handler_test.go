@@ -2,9 +2,12 @@ package tests
 
 import (
 	"Ultra-learn/internal/database"
+	"Ultra-learn/internal/dto"
 	"Ultra-learn/internal/repository"
 	"Ultra-learn/internal/server"
 	"Ultra-learn/internal/services"
+	"bytes"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/http/httptest"
@@ -79,8 +82,15 @@ func TestRegisterUserHandler(t *testing.T) {
 	s := setupServer()
 	r := gin.New()
 	r.POST("/api/v1/auth/register", s.RegisterUserHandler)
+	user := dto.CreateUserRequest{
+		FirstName: "John",
+		LastName:  "Doe",
+		Email:     "johndoe@gmail.com",
+		Password:  "password",
+	}
+	userJson, _ := json.Marshal(user)
 	// Create a test HTTP request
-	req, err := http.NewRequest("POST", "/api/v1/auth/register", nil)
+	req, err := http.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(userJson))
 	if err != nil {
 		t.Fatal(err)
 	}
