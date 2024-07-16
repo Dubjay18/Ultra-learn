@@ -53,13 +53,14 @@ func GenerateJWT(userID string, role repository.Role) (string, error) {
 
 func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequest) *errors.ApiError {
 	// Get the user data from the request
-	if err := c.ShouldBindJSON(&user); err != nil {
-		return &errors.ApiError{
-			Message:    errors.ValidationError,
-			StatusCode: http.StatusBadRequest,
-			Error:      err.Error(),
-		}
-	}
+	//if err := c.ShouldBindJSON(&user); err != nil {
+	//
+	//	return &errors.ApiError{
+	//		Message:    errors.ValidationError,
+	//		StatusCode: http.StatusBadRequest,
+	//		Error:      err.Error(),
+	//	}
+	//}
 	// Hash the user's password
 	hash, err := hashPassword(user.Password)
 	if err != nil {

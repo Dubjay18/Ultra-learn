@@ -2,6 +2,7 @@ package repository
 
 import (
 	"Ultra-learn/internal/database"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -30,7 +31,7 @@ type DefaultUserRepository struct {
 }
 
 func (r *DefaultUserRepository) CreateUser(user *User) error {
-	_, err := r.db.Database("users").Collection("users").InsertOne(nil, user)
+	_, err := r.db.Database(database.DatabaseName).Collection("users").InsertOne(nil, user)
 	if err != nil {
 		return err
 	}
@@ -40,7 +41,7 @@ func (r *DefaultUserRepository) CreateUser(user *User) error {
 
 func (r *DefaultUserRepository) GetUserByEmail(email string) (*User, error) {
 	var user User
-	err := r.db.Database("users").Collection("users").FindOne(nil, bson.D{
+	err := r.db.Database(database.DatabaseName).Collection("users").FindOne(nil, bson.D{
 		{"email", email},
 	}).Decode(&user)
 	if err != nil {

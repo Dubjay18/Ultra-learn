@@ -3,6 +3,7 @@ package server
 import (
 	"Ultra-learn/internal/dto"
 	"Ultra-learn/internal/errors"
+	"Ultra-learn/internal/helper"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -37,16 +38,12 @@ func (s *Server) HelloWorldHandler(c *gin.Context) {
 // ...
 // Register user handler
 func (s *Server) RegisterUserHandler(c *gin.Context) {
-	if s.AuthService == nil {
-		c.JSON(http.StatusInternalServerError, errors.ApiError{
-			Message:    "Internal server error",
-			Error:      "AuthService is not initialized",
-			StatusCode: http.StatusInternalServerError,
-		})
+	var user *dto.CreateUserRequest
+	perr := helper.ParseRequestBody(c, &user)
+	if perr != nil {
 		return
 	}
-	user := dto.CreateUserRequest{}
-	err := s.AuthService.CreateUser(c, &user)
+	err := s.AuthService.CreateUser(c, user)
 	if err != nil {
 		// User creation failed
 		c.JSON(
