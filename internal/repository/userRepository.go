@@ -31,7 +31,7 @@ type DefaultUserRepository struct {
 }
 
 func (r *DefaultUserRepository) CreateUser(user *User) error {
-	_, err := r.db.Database(database.DatabaseName).Collection("users").InsertOne(nil, user)
+	err := database.InsertOne(r.db, "users", user)
 	if err != nil {
 		return err
 	}
@@ -41,9 +41,10 @@ func (r *DefaultUserRepository) CreateUser(user *User) error {
 
 func (r *DefaultUserRepository) GetUserByEmail(email string) (*User, error) {
 	var user User
-	err := r.db.Database(database.DatabaseName).Collection("users").FindOne(nil, bson.D{
+	err := database.GetOne(r.db, "users", bson.D{
 		{"email", email},
-	}).Decode(&user)
+	}, &user)
+
 	if err != nil {
 		return nil, err
 	}
@@ -53,9 +54,9 @@ func (r *DefaultUserRepository) GetUserByEmail(email string) (*User, error) {
 
 func (r *DefaultUserRepository) GetUserByID(id string) (*User, error) {
 	var user User
-	err := r.db.Database(database.DatabaseName).Collection("users").FindOne(nil, bson.D{
+	err := database.GetOne(r.db, "users", bson.D{
 		{"_id", id},
-	}).Decode(&user)
+	}, &user)
 	if err != nil {
 		return nil, err
 	}
@@ -64,16 +65,16 @@ func (r *DefaultUserRepository) GetUserByID(id string) (*User, error) {
 }
 
 func (r *DefaultUserRepository) UpdateUser(user *User) error {
-	_, err := r.db.Database(database.DatabaseName).Collection("users").UpdateOne(nil, bson.D{
+	err := database.UpdateOne(r.db, "users", bson.D{
 		{"_id", user.ID},
 	}, bson.D{
 		{"$set", bson.D{
-			{"firstName", user.FirstName},
-			{"lastName", user.LastName},
+			{"first_name", user.FirstName},
+			{"last_name", user.LastName},
 			{"email", user.Email},
 			{"password", user.Password},
-		}},
-	})
+		},
+		}})
 
 	if err != nil {
 		return err
@@ -82,13 +83,13 @@ func (r *DefaultUserRepository) UpdateUser(user *User) error {
 }
 
 func (r *DefaultUserRepository) UpdateAvatar(id string, avatar string) error {
-	_, err := r.db.Database(database.DatabaseName).Collection("users").UpdateOne(nil, bson.D{
+	err := database.UpdateOne(r.db, "users", bson.D{
 		{"_id", id},
 	}, bson.D{
 		{"$set", bson.D{
 			{"avatar", avatar},
-		}},
-	})
+		},
+		}})
 
 	if err != nil {
 		return err

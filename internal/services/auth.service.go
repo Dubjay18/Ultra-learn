@@ -62,6 +62,15 @@ func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 	//	}
 	//}
 	// Hash the user's password
+	//check if user already exists
+	_, err := a.repo.GetUserByEmail(user.Email)
+	if err == nil {
+		return &errors.ApiError{
+			Message:    errors.ValidationError,
+			StatusCode: http.StatusBadRequest,
+			Error:      "User already exists",
+		}
+	}
 	hash, err := hashPassword(user.Password)
 	if err != nil {
 		return &errors.ApiError{
