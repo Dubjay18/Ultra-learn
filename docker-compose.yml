@@ -1,15 +1,15 @@
+version: "3.8"
 
 services:
-  psql:
-    image: postgres:latest
+  mongo:
+    image: mongo:latest
     environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
-      - "${DB_PORT}:5432"
+      - "${DB_PORT}:27017"
     volumes:
-      - psql_volume:/var/lib/postgresql/data
+      - mongo_volume:/data/db
 
 volumes:
-  psql_volume:
+  mongo_volume:

@@ -1,12 +1,15 @@
 package server
 
-import "C"
 import (
 	"Ultra-learn/internal/dto"
 	"Ultra-learn/internal/errors"
+	"Ultra-learn/internal/helper"
+	"Ultra-learn/internal/logger"
+	errors2 "errors"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"net/http"
 )
 
 func (s *Server) healthHandler(c *gin.Context) {
@@ -37,39 +40,33 @@ func (s *Server) HelloWorldHandler(c *gin.Context) {
 // ...
 // Register user handler
 func (s *Server) RegisterUserHandler(c *gin.Context) {
-	if s.AuthService == nil {
-		c.JSON(http.StatusInternalServerError, errors.ApiError{
-			Message:    "Internal server error",
-			Error:      "AuthService is not initialized",
-			StatusCode: http.StatusInternalServerError,
-		})
+	var user *dto.CreateUserRequest
+	perr := helper.ParseRequestBody(c, &user)
+	if perr != nil {
+
 		return
 	}
-	var user dto.CreateUserRequest
-	err := s.AuthService.CreateUser(c, &user)
+	resp, err := s.AuthService.CreateUser(c, user)
 	if err != nil {
 		// User creation failed
-		c.JSON(
-			err.StatusCode,
+		c.JSON(err.StatusCode,
 			err)
 		return
 	}
-	c.JSON(http.StatusCreated,
-		dto.ApiSuccessResponse{
-			Message:    "User created successfully",
-			StatusCode: http.StatusCreated,
-		})
+	// User created successfully
+	Eerr := s.EmailService.SendSignUpEmail(user.Email, user.FirstName)
+	if Eerr != nil {
+		logger.Error("Error sending email: " + Eerr.Error())
+	}
 
+	helper.BuildSuccessResponse(c, http.StatusCreated, "User created successfully", resp)
+	return
 }
 
 // Sign in user handler
 func (s *Server) SignInUserHandler(c *gin.Context) {
 	if s.AuthService == nil {
-		c.JSON(http.StatusInternalServerError, errors.ApiError{
-			Message:    "Internal server error",
-			Error:      "AuthService is not initialized",
-			StatusCode: http.StatusInternalServerError,
-		})
+		helper.BuildErrorResponse(c, http.StatusInternalServerError, "Internal server error", errors2.New("AuthService is not initialized"))
 		return
 	}
 	var user dto.LoginRequest
@@ -78,11 +75,7 @@ func (s *Server) SignInUserHandler(c *gin.Context) {
 		c.JSON(err.StatusCode, err)
 		return
 	}
-	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
-		Message:    "User logged in successfully",
-		Data:       resp,
-		StatusCode: http.StatusOK,
-	})
+	helper.BuildSuccessResponse(c, http.StatusOK, "User logged in successfully", resp)
 }
 
 // user handlers
@@ -103,11 +96,7 @@ func (s *Server) GetUserDetailsHandler(c *gin.Context) {
 		c.JSON(err.StatusCode, err)
 		return
 	}
-	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
-		Message:    "User details retrieved successfully",
-		Data:       user,
-		StatusCode: http.StatusOK,
-	})
+	helper.BuildSuccessResponse(c, http.StatusOK, "User details retrieved successfully", user)
 }
 
 // Update user details handler
@@ -131,21 +120,13 @@ func (s *Server) UpdateUserDetailsHandler(c *gin.Context) {
 		case "first_name", "last_name", "email", "avatar":
 			continue
 		default:
-			c.JSON(http.StatusBadRequest, errors.ApiError{
-				Message:    "Invalid request",
-				Error:      "Unexpected field " + key,
-				StatusCode: http.StatusBadRequest,
-			})
+			helper.BuildErrorResponse(c, http.StatusBadRequest, "Invalid request", errors2.New("Invalid request"))
 			return
 		}
 	}
 
 	if err := c.ShouldBindBodyWith(&user, binding.JSON); err != nil {
-		c.JSON(http.StatusBadRequest, errors.ApiError{
-			Message:    "Invalid request",
-			Error:      err.Error(),
-			StatusCode: http.StatusBadRequest,
-		})
+		helper.BuildErrorResponse(c, http.StatusBadRequest, "Invalid request", err)
 		return
 	}
 
@@ -155,22 +136,15 @@ func (s *Server) UpdateUserDetailsHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
-		Message:    "User details updated successfully",
-		Data:       userDetails,
-		StatusCode: http.StatusOK,
-	})
+	helper.BuildSuccessResponse(c, http.StatusOK, "User details updated successfully", userDetails)
 }
 
 func (s *Server) UpdateAvatarHandler(c *gin.Context) {
 	userID := c.GetString("USER_ID")
 	file, _, fileErr := c.Request.FormFile("avatar")
 	if fileErr != nil {
-		c.JSON(http.StatusBadRequest, errors.ApiError{
-			Message:    "Invalid request",
-			Error:      fileErr.Error(),
-			StatusCode: http.StatusBadRequest,
-		})
+		logger.Error("Error uploading file: " + fileErr.Error())
+		helper.BuildErrorResponse(c, http.StatusBadRequest, "Error uploading file", fileErr)
 		return
 	}
 
@@ -180,9 +154,5 @@ func (s *Server) UpdateAvatarHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.ApiSuccessResponse{
-		Message:    "Avatar updated successfully",
-		StatusCode: http.StatusOK,
-		Data:       avatarUrl,
-	})
+	helper.BuildSuccessResponse(c, http.StatusOK, "Avatar updated successfully", avatarUrl)
 }

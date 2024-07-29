@@ -1,7 +1,10 @@
 package repository
 
 import (
-	"database/sql"
+	"Ultra-learn/internal/database"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Role string
@@ -24,11 +27,11 @@ type UserRepository interface {
 	UpdateAvatar(id string, avatar string) error
 }
 type DefaultUserRepository struct {
-	db *sql.DB
+	db *mongo.Client
 }
 
 func (r *DefaultUserRepository) CreateUser(user *User) error {
-	_, err := r.db.Exec("INSERT INTO users (first_name, last_name, email, password, role,id,avatar) VALUES ($1, $2, $3, $4, $5,$6,$7)", user.FirstName, user.LastName, user.Email, user.Password, user.Role, user.ID, user.Avatar)
+	err := database.InsertOne(r.db, "users", user)
 	if err != nil {
 		return err
 	}
@@ -38,7 +41,10 @@ func (r *DefaultUserRepository) CreateUser(user *User) error {
 
 func (r *DefaultUserRepository) GetUserByEmail(email string) (*User, error) {
 	var user User
-	err := r.db.QueryRow("SELECT first_name, last_name, email, password, role,id,avatar FROM users WHERE email = $1", email).Scan(&user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Role, &user.ID, &user.Avatar)
+	err := database.GetOne(r.db, "users", bson.D{
+		{"email", email},
+	}, &user)
+
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +54,9 @@ func (r *DefaultUserRepository) GetUserByEmail(email string) (*User, error) {
 
 func (r *DefaultUserRepository) GetUserByID(id string) (*User, error) {
 	var user User
-	err := r.db.QueryRow("SELECT first_name, last_name, email, password, role,id,avatar FROM users WHERE id = $1", id).Scan(&user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Role, &user.ID, &user.Avatar)
+	err := database.GetOne(r.db, "users", bson.D{
+		{"_id", id},
+	}, &user)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +65,17 @@ func (r *DefaultUserRepository) GetUserByID(id string) (*User, error) {
 }
 
 func (r *DefaultUserRepository) UpdateUser(user *User) error {
-	_, err := r.db.Exec("UPDATE users SET first_name = $1, last_name = $2, email = $3, password = $4, role = $5,avatar=$6 WHERE id = $7", user.FirstName, user.LastName, user.Email, user.Password, user.Role, user.Avatar, user.ID)
+	err := database.UpdateOne(r.db, "users", bson.D{
+		{"_id", user.ID},
+	}, bson.D{
+		{"$set", bson.D{
+			{"first_name", user.FirstName},
+			{"last_name", user.LastName},
+			{"email", user.Email},
+			{"password", user.Password},
+		},
+		}})
+
 	if err != nil {
 		return err
 	}
@@ -65,14 +83,21 @@ func (r *DefaultUserRepository) UpdateUser(user *User) error {
 }
 
 func (r *DefaultUserRepository) UpdateAvatar(id string, avatar string) error {
-	_, err := r.db.Exec("UPDATE users SET avatar = $1 WHERE id = $2", avatar, id)
+	err := database.UpdateOne(r.db, "users", bson.D{
+		{"_id", id},
+	}, bson.D{
+		{"$set", bson.D{
+			{"avatar", avatar},
+		},
+		}})
+
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func NewUserRepository(db *sql.DB) *DefaultUserRepository {
+func NewUserRepository(db *mongo.Client) *DefaultUserRepository {
 	return &DefaultUserRepository{
 		db: db,
 	}
