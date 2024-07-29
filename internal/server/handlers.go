@@ -43,18 +43,24 @@ func (s *Server) RegisterUserHandler(c *gin.Context) {
 	var user *dto.CreateUserRequest
 	perr := helper.ParseRequestBody(c, &user)
 	if perr != nil {
+
 		return
 	}
-	err := s.AuthService.CreateUser(c, user)
+	resp, err := s.AuthService.CreateUser(c, user)
 	if err != nil {
 		// User creation failed
-		c.JSON(
-			err.StatusCode,
+		c.JSON(err.StatusCode,
 			err)
 		return
 	}
-	helper.BuildSuccessResponse(c, http.StatusCreated, "User created successfully", nil)
+	// User created successfully
+	Eerr := s.EmailService.SendSignUpEmail(user.Email, user.FirstName)
+	if Eerr != nil {
+		logger.Error("Error sending email: " + Eerr.Error())
+	}
 
+	helper.BuildSuccessResponse(c, http.StatusCreated, "User created successfully", resp)
+	return
 }
 
 // Sign in user handler

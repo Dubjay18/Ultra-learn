@@ -15,7 +15,7 @@ import (
 )
 
 type AuthService interface {
-	CreateUser(c *gin.Context, user *dto.CreateUserRequest) *errors.ApiError
+	CreateUser(c *gin.Context, user *dto.CreateUserRequest) (*dto.UserDetailsResponse, *errors.ApiError)
 	Login(c *gin.Context, user *dto.LoginRequest) (*dto.LoginResponse, *errors.ApiError)
 }
 
@@ -51,7 +51,7 @@ func GenerateJWT(userID string, role repository.Role) (string, error) {
 	return tokenString, nil
 }
 
-func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequest) *errors.ApiError {
+func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequest) (*dto.UserDetailsResponse, *errors.ApiError) {
 	// Get the user data from the request
 	//if err := c.ShouldBindJSON(&user); err != nil {
 	//
@@ -65,7 +65,7 @@ func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 	//check if user already exists
 	_, err := a.repo.GetUserByEmail(user.Email)
 	if err == nil {
-		return &errors.ApiError{
+		return nil, &errors.ApiError{
 			Message:    errors.ValidationError,
 			StatusCode: http.StatusBadRequest,
 			Error:      "User already exists",
@@ -73,7 +73,7 @@ func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 	}
 	hash, err := hashPassword(user.Password)
 	if err != nil {
-		return &errors.ApiError{
+		return nil, &errors.ApiError{
 			Message:    errors.InternalServerError,
 			StatusCode: http.StatusInternalServerError,
 			Error:      "Failed to Create User",
@@ -81,23 +81,30 @@ func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 	}
 	user.Password = hash
 
-	// Save the user to the database
-	dbErr := a.repo.CreateUser(&repository.User{FirstName: user.FirstName,
+	userReq := &repository.User{FirstName: user.FirstName,
 		Email:    user.Email,
 		Password: user.Password,
 		LastName: user.LastName,
 		Role:     "user",
 		Avatar:   fmt.Sprintf("https://eu.ui-avatars.com/api/?name=%v+%v&size=250", user.FirstName, user.LastName),
 		ID:       helper.GenerateUserId(),
-	})
+	}
+	// Save the user to the database
+	dbErr := a.repo.CreateUser(userReq)
 	if dbErr != nil {
-		return &errors.ApiError{
+		return nil, &errors.ApiError{
 			Message:    errors.InternalServerError,
 			StatusCode: http.StatusInternalServerError,
 			Error:      dbErr.Error(),
 		}
 	}
-	return nil
+	return &dto.UserDetailsResponse{
+		ID:        userReq.ID,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		Avatar:    userReq.Avatar,
+	}, nil
 }
 
 func (a *DefaultAuthService) Login(c *gin.Context, user *dto.LoginRequest) (*dto.LoginResponse, *errors.ApiError) {
