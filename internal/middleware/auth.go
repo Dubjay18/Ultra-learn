@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"Ultra-learn/internal/errors"
+	"Ultra-learn/internal/helper"
+	errors2 "errors"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -9,17 +11,10 @@ import (
 	"time"
 )
 
-func isLoggedIn(c *gin.Context) bool {
-	userID := c.GetString("USER_ID")
-	return userID != ""
-}
-
-func getUserRole(c *gin.Context) string {
-	// Get the user's role from the session or database
-	// Example: get the role from the session
-	role := c.GetString("role")
-	return role
-}
+// func isLoggedIn(c *gin.Context) bool {
+// 	userID := c.GetString("USER_ID")
+// 	return userID != ""
+// }
 
 func isRoleAllowed(role string, allowedRoles []string) bool {
 	// Check if the user's role is allowed
@@ -61,28 +56,18 @@ func AuthMiddleware(c *gin.Context) {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		if exp, ok := claims["exp"].(float64); ok {
 			if time.Now().Unix() > int64(exp) {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, errors.ApiError{Message: "Token has expired",
-					Error:      err.Error(),
-					StatusCode: http.StatusUnauthorized,
-				})
+				helper.BuildErrorResponse(c, http.StatusUnauthorized, "Invalid token", errors2.New("token has expired"))
 				return
 			}
 		} else {
-			c.AbortWithStatusJSON(http.StatusBadRequest, errors.ApiError{
-				Message:    "Invalid token",
-				Error:      err.Error(),
-				StatusCode: http.StatusBadRequest,
-			})
+			helper.BuildErrorResponse(c, http.StatusUnauthorized, "Invalid token", errors2.New("invalid token"))
 			return
 		}
 		c.Set("USER_ID", claims["USER_ID"])
 		c.Set("role", claims["role"])
 
 	} else {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, errors.ApiError{Message: "Unauthorized",
-			Error:      err.Error(),
-			StatusCode: http.StatusUnauthorized,
-		})
+		helper.BuildErrorResponse(c, http.StatusUnauthorized, "Invalid token", errors2.New("invalid token"))
 		return
 	}
 	//if !isLoggedIn(c) {
@@ -96,12 +81,9 @@ func AuthMiddleware(c *gin.Context) {
 func AccessControlMiddleware(allowedRoles []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Check if the user has the required role
-		role := getUserRole(c)
+		role := helper.GetUserRole(c)
 		if !isRoleAllowed(role, allowedRoles) {
-			c.AbortWithStatusJSON(http.StatusForbidden, errors.ApiError{Message: "Forbidden",
-				Error:      "You do not have permission to access this resource",
-				StatusCode: http.StatusForbidden,
-			})
+			helper.BuildErrorResponse(c, http.StatusForbidden, "Forbidden", errors2.New("you are not allowed to access this resource"))
 			return
 		}
 		// Call the next handler

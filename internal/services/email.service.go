@@ -4,8 +4,9 @@ import (
 	"Ultra-learn/internal/logger"
 	"bytes"
 	"html/template"
-	"net/smtp"
 	"os"
+
+	"github.com/SlyMarbo/gmail"
 )
 
 var (
@@ -23,11 +24,17 @@ type DefaultEmailService struct {
 }
 
 func (s *DefaultEmailService) SendEmail(to string, subject string, body string) error {
-	auth := smtp.PlainAuth("", FromEmail, EmailPassword, EmailHost)
-	err := smtp.SendMail(EmailHost, auth, FromEmail, []string{to}, []byte("Subject: "+subject+"\r\n"+body))
+	email := gmail.Compose(subject, body)
+	email.From = FromEmail
+	email.Password = EmailPassword
+	// Defaults to "text/plain; charset=utf-8" if unset.
+	email.ContentType = "text/html; charset=utf-8"
+	email.AddRecipient(to)
+	err := email.Send()
 	if err != nil {
 		return err
 	}
+	logger.Info("Email sent successfully")
 	return nil
 }
 
@@ -55,9 +62,6 @@ func (s *DefaultEmailService) SendSignUpEmail(to string, name string) error {
 		return err
 	}
 
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

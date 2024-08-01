@@ -98,3 +98,10 @@ func BuildErrorResponse(c *gin.Context, status int, message string, err error) {
 	}
 	c.JSON(status, rd)
 }
+
+func GetUserRole(c *gin.Context) string {
+	// Get the user's role from the session or database
+	// Example: get the role from the session
+	role := c.GetString("role")
+	return role
+}

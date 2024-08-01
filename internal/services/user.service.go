@@ -42,7 +42,7 @@ func (s *DefaultUserService) GetUserDetails(id string) (*dto.UserDetailsResponse
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
-		Role:      string(user.Role),
+		Role:      user.Role,
 	}, nil
 }
 
@@ -83,7 +83,7 @@ func (s *DefaultUserService) UpdateUserDetails(id string, user *dto.UpdateUserRe
 		FirstName: u.FirstName,
 		LastName:  u.LastName,
 		Email:     u.Email,
-		Role:      string(u.Role),
+		Role:      u.Role,
 	}, nil
 }
 func (s *DefaultUserService) UpdateAvatar(id string, file any, c *gin.Context) (string, *errors.ApiError) {

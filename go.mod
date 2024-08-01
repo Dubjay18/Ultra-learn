@@ -16,6 +16,7 @@ require (
 )
 
 require (
+	github.com/SlyMarbo/gmail v0.0.0-20170317233059-3ec3141ee13b // indirect
 	github.com/bytedance/sonic v1.11.8 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
