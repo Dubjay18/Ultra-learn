@@ -16,7 +16,7 @@ type User struct {
 	LastName  string `json:"lastName"db:"last_name"`
 	Email     string `json:"email"db:"email"`
 	Password  string `json:"password"db:"password"`
-	Role      Role   `json:"role"db:"role"`
+	Role      int    `json:"role"db:"role"`
 }
 
 type UserRepository interface {

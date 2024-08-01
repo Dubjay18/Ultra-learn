@@ -36,7 +36,7 @@ func verifyPassword(password, hash string) bool {
 	return err == nil
 }
 
-func GenerateJWT(userID string, role repository.Role) (string, error) {
+func GenerateJWT(userID string, role int) (string, error) {
 	secretKey := os.Getenv("JWT_SECRET")
 	expirationTime := time.Now().Add(1 * time.Hour).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -85,7 +85,7 @@ func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 		Email:    user.Email,
 		Password: user.Password,
 		LastName: user.LastName,
-		Role:     "user",
+		Role:     dto.RoleUser,
 		Avatar:   fmt.Sprintf("https://eu.ui-avatars.com/api/?name=%v+%v&size=250", user.FirstName, user.LastName),
 		ID:       helper.GenerateUserId(),
 	}
