@@ -37,13 +37,12 @@ func (s *Server) HelloWorldHandler(c *gin.Context) {
 }
 
 // auth handlers
-// ...
-// Register user handler
+
+// RegisterUserHandler Register user handler
 func (s *Server) RegisterUserHandler(c *gin.Context) {
 	var user *dto.CreateUserRequest
 	perr := helper.ParseRequestBody(c, &user)
 	if perr != nil {
-
 		return
 	}
 	resp, err := s.AuthService.CreateUser(c, user)
@@ -60,10 +59,9 @@ func (s *Server) RegisterUserHandler(c *gin.Context) {
 	}
 
 	helper.BuildSuccessResponse(c, http.StatusCreated, "User created successfully", resp)
-	return
 }
 
-// Sign in user handler
+// SignInUserHandler Sign in user handler
 func (s *Server) SignInUserHandler(c *gin.Context) {
 	if s.AuthService == nil {
 		helper.BuildErrorResponse(c, http.StatusInternalServerError, "Internal server error", errors2.New("AuthService is not initialized"))
@@ -79,8 +77,8 @@ func (s *Server) SignInUserHandler(c *gin.Context) {
 }
 
 // user handlers
-// ...
-// Get user details handler
+
+// GetUserDetailsHandler Get user details handler
 func (s *Server) GetUserDetailsHandler(c *gin.Context) {
 	if s.AuthService == nil {
 		c.JSON(http.StatusInternalServerError, errors.ApiError{
@@ -99,7 +97,7 @@ func (s *Server) GetUserDetailsHandler(c *gin.Context) {
 	helper.BuildSuccessResponse(c, http.StatusOK, "User details retrieved successfully", user)
 }
 
-// Update user details handler
+// UpdateUserDetailsHandler Update user details handler
 func (s *Server) UpdateUserDetailsHandler(c *gin.Context) {
 	userID := c.GetString("USER_ID")
 

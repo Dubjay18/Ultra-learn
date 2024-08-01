@@ -1,3 +1,5 @@
+github.com/SlyMarbo/gmail v0.0.0-20170317233059-3ec3141ee13b h1:z8jRcfsRXi4gmL85SPQvgafFRUvR5k0LPU4RUSPpvro=
+github.com/SlyMarbo/gmail v0.0.0-20170317233059-3ec3141ee13b/go.mod h1:rmnWBw/y22Ohv+uLY5cBZCa620ZH/ID3TehrUssWHWA=
 github.com/bytedance/sonic v1.11.8 h1:Zw/j1KfiS+OYTi9lyB3bb0CFxPJVkM17k1wyDG32LRA=
 github.com/bytedance/sonic v1.11.8/go.mod h1:LysEHSvpvDySVdC2f87zGWf6CIKJcAvqab1ZaiQtds4=
 github.com/bytedance/sonic/loader v0.1.1 h1:c+e5Pt1k/cy5wMveRDyk2X4B9hF4g7an8N3zCYjJFNM=
