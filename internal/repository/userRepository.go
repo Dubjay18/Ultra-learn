@@ -2,35 +2,24 @@ package repository
 
 import (
 	"Ultra-learn/internal/database"
+	"Ultra-learn/internal/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type Role string
-
-type User struct {
-	ID        string `json:"id"db:"id"`
-	Avatar    string `json:"avatar"db:"avatar"`
-	FirstName string `json:"firstName"db:"first_name"`
-	LastName  string `json:"lastName"db:"last_name"`
-	Email     string `json:"email"db:"email"`
-	Password  string `json:"password"db:"password"`
-	Role      int    `json:"role"db:"role"`
-}
-
 type UserRepository interface {
-	CreateUser(user *User) error
-	GetUserByEmail(email string) (*User, error)
-	GetUserByID(id string) (*User, error)
-	UpdateUser(user *User) error
+	CreateUser(user *models.User) error
+	GetUserByEmail(email string) (*models.User, error)
+	GetUserByID(id string) (*models.User, error)
+	UpdateUser(user *models.User) error
 	UpdateAvatar(id string, avatar string) error
 }
 type DefaultUserRepository struct {
 	db *mongo.Client
 }
 
-func (r *DefaultUserRepository) CreateUser(user *User) error {
+func (r *DefaultUserRepository) CreateUser(user *models.User) error {
 	err := database.InsertOne(r.db, "users", user)
 	if err != nil {
 		return err
@@ -39,10 +28,10 @@ func (r *DefaultUserRepository) CreateUser(user *User) error {
 
 }
 
-func (r *DefaultUserRepository) GetUserByEmail(email string) (*User, error) {
-	var user User
+func (r *DefaultUserRepository) GetUserByEmail(email string) (*models.User, error) {
+	var user models.User
 	err := database.GetOne(r.db, "users", bson.D{
-		{"email", email},
+		{Key: "email", Value: email},
 	}, &user)
 
 	if err != nil {
@@ -52,10 +41,10 @@ func (r *DefaultUserRepository) GetUserByEmail(email string) (*User, error) {
 
 }
 
-func (r *DefaultUserRepository) GetUserByID(id string) (*User, error) {
-	var user User
+func (r *DefaultUserRepository) GetUserByID(id string) (*models.User, error) {
+	var user models.User
 	err := database.GetOne(r.db, "users", bson.D{
-		{"_id", id},
+		{Key: "_id", Value: id},
 	}, &user)
 	if err != nil {
 		return nil, err
@@ -64,15 +53,15 @@ func (r *DefaultUserRepository) GetUserByID(id string) (*User, error) {
 
 }
 
-func (r *DefaultUserRepository) UpdateUser(user *User) error {
+func (r *DefaultUserRepository) UpdateUser(user *models.User) error {
 	err := database.UpdateOne(r.db, "users", bson.D{
-		{"_id", user.ID},
+		{Key: "_id", Value: user.ID},
 	}, bson.D{
-		{"$set", bson.D{
-			{"first_name", user.FirstName},
-			{"last_name", user.LastName},
-			{"email", user.Email},
-			{"password", user.Password},
+		{Key: "$set", Value: bson.D{
+			{Key: "first_name", Value: user.FirstName},
+			{Key: "last_name", Value: user.LastName},
+			{Key: "email", Value: user.Email},
+			{Key: "password", Value: user.Password},
 		},
 		}})
 
@@ -84,10 +73,10 @@ func (r *DefaultUserRepository) UpdateUser(user *User) error {
 
 func (r *DefaultUserRepository) UpdateAvatar(id string, avatar string) error {
 	err := database.UpdateOne(r.db, "users", bson.D{
-		{"_id", id},
+		{Key: "_id", Value: id},
 	}, bson.D{
-		{"$set", bson.D{
-			{"avatar", avatar},
+		{Key: "$set", Value: bson.D{
+			{Key: "avatar", Value: avatar},
 		},
 		}})
 

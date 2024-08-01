@@ -4,14 +4,16 @@ import (
 	"Ultra-learn/internal/dto"
 	"Ultra-learn/internal/errors"
 	"Ultra-learn/internal/helper"
+	"Ultra-learn/internal/models"
 	"Ultra-learn/internal/repository"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService interface {
@@ -81,7 +83,7 @@ func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 	}
 	user.Password = hash
 
-	userReq := &repository.User{FirstName: user.FirstName,
+	userReq := &models.User{FirstName: user.FirstName,
 		Email:    user.Email,
 		Password: user.Password,
 		LastName: user.LastName,
