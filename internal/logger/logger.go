@@ -7,7 +7,7 @@ import (
 
 var log *zap.Logger
 
-func init() {
+func Init() {
 	var err error
 	config := zap.NewProductionConfig()
 	encoderConfig := zap.NewProductionEncoderConfig()
