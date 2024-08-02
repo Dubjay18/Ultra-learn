@@ -2,23 +2,26 @@ package services
 
 import (
 	"Ultra-learn/internal/dto"
-	"Ultra-learn/internal/errors"
 	"Ultra-learn/internal/helper"
 	"Ultra-learn/internal/models"
 	"Ultra-learn/internal/repository"
+	errors2 "errors"
 	"fmt"
-	"net/http"
-	"os"
-	"time"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"os"
+	"time"
 )
 
+// TODO: set up social logins
+// TODO: set up email verification
+// TODO: set up password reset
+// TODO: set up user roles
+// TODO: set up user permissions
 type AuthService interface {
-	CreateUser(c *gin.Context, user *dto.CreateUserRequest) (*dto.UserDetailsResponse, *errors.ApiError)
-	Login(c *gin.Context, user *dto.LoginRequest) (*dto.LoginResponse, *errors.ApiError)
+	CreateUser(c *gin.Context, user *dto.CreateUserRequest) (*dto.UserDetailsResponse, error)
+	Login(c *gin.Context, user *dto.LoginRequest) (*dto.LoginResponse, error)
 }
 
 type DefaultAuthService struct {
@@ -53,7 +56,7 @@ func GenerateJWT(userID string, role int) (string, error) {
 	return tokenString, nil
 }
 
-func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequest) (*dto.UserDetailsResponse, *errors.ApiError) {
+func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequest) (*dto.UserDetailsResponse, error) {
 	// Get the user data from the request
 	//if err := c.ShouldBindJSON(&user); err != nil {
 	//
@@ -67,19 +70,11 @@ func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 	//check if user already exists
 	_, err := a.repo.GetUserByEmail(user.Email)
 	if err == nil {
-		return nil, &errors.ApiError{
-			Message:    errors.ValidationError,
-			StatusCode: http.StatusBadRequest,
-			Error:      "User already exists",
-		}
+		return nil, err
 	}
 	hash, err := hashPassword(user.Password)
 	if err != nil {
-		return nil, &errors.ApiError{
-			Message:    errors.InternalServerError,
-			StatusCode: http.StatusInternalServerError,
-			Error:      "Failed to Create User",
-		}
+		return nil, err
 	}
 	user.Password = hash
 
@@ -94,11 +89,7 @@ func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 	// Save the user to the database
 	dbErr := a.repo.CreateUser(userReq)
 	if dbErr != nil {
-		return nil, &errors.ApiError{
-			Message:    errors.InternalServerError,
-			StatusCode: http.StatusInternalServerError,
-			Error:      dbErr.Error(),
-		}
+		return nil, dbErr
 	}
 	return &dto.UserDetailsResponse{
 		ID:        userReq.ID,
@@ -109,40 +100,20 @@ func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequ
 	}, nil
 }
 
-func (a *DefaultAuthService) Login(c *gin.Context, user *dto.LoginRequest) (*dto.LoginResponse, *errors.ApiError) {
-	// Get the user data from the request
-	if err := c.ShouldBindJSON(&user); err != nil {
-		return nil, &errors.ApiError{
-			Message:    errors.ValidationError,
-			StatusCode: http.StatusBadRequest,
-			Error:      err.Error(),
-		}
-	}
+func (a *DefaultAuthService) Login(c *gin.Context, user *dto.LoginRequest) (*dto.LoginResponse, error) {
 	// Get the user from the database
 	u, err := a.repo.GetUserByEmail(user.Email)
 	if err != nil {
-		return nil, &errors.ApiError{
-			Message:    errors.InternalServerError,
-			StatusCode: http.StatusInternalServerError,
-			Error:      err.Error(),
-		}
+		return nil, err
 	}
 	// Verify the user's password
 	if !verifyPassword(user.Password, u.Password) {
-		return nil, &errors.ApiError{
-			Message:    errors.UnAuthorized,
-			StatusCode: http.StatusUnauthorized,
-			Error:      "Invalid email or password",
-		}
+		return nil, errors2.New("Invalid password or email")
 	}
 	// Generate a JWT token
 	token, err := GenerateJWT(u.ID, u.Role)
 	if err != nil {
-		return nil, &errors.ApiError{
-			Message:    errors.InternalServerError,
-			StatusCode: http.StatusInternalServerError,
-			Error:      err.Error(),
-		}
+		return nil, err
 	}
 	return &dto.LoginResponse{Token: token}, nil
 }

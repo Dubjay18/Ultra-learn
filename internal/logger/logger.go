@@ -1,22 +1,28 @@
 package logger
 
 import (
+	"Ultra-learn/config"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 var log *zap.Logger
 
-func init() {
+func Init() {
 	var err error
-	config := zap.NewProductionConfig()
+	zapConfig := zap.NewProductionConfig()
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.TimeKey = "timestamp"
 	encoderConfig.StacktraceKey = ""
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	config.EncoderConfig = encoderConfig
-
-	log, err = config.Build(zap.AddCallerSkip(1))
+	zapConfig.EncoderConfig = encoderConfig
+	zapConfig.Development = config.IS_DEVELOP_MODE
+	zapConfig.Encoding = "json"
+	zapConfig.InitialFields = map[string]interface{}{"idtx": "999"}
+	zapConfig.OutputPaths = []string{"stdout", config.APP_LOG_FOLDER + "app_log.log"}
+	zapConfig.ErrorOutputPaths = []string{"stderr"}
+	log, err = zapConfig.Build(zap.AddCallerSkip(1))
 	//log, err = zap.NewProduction()
 	if err != nil {
 		panic(err)

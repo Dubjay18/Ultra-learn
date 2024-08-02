@@ -3,6 +3,7 @@ package helper
 import (
 	"Ultra-learn/internal/dto"
 	"Ultra-learn/internal/errors"
+	"Ultra-learn/internal/logger"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,6 +19,10 @@ import (
 )
 
 func GenerateUserId() string {
+	return uuid.New().String()
+}
+
+func GenerateUUID() string {
 	return uuid.New().String()
 }
 
@@ -90,11 +95,14 @@ func BuildSuccessResponse(c *gin.Context, status int, message string, data any) 
 	c.JSON(status, rd)
 }
 
-func BuildErrorResponse(c *gin.Context, status int, message string, err error) {
+func BuildErrorResponse(c *gin.Context, status int, message string, err interface{}) {
+	if status == http.StatusInternalServerError {
+		logger.Error(err.(error).Error())
+	}
 	rd := errors.ApiError{
 		Message:    message,
 		StatusCode: status,
-		Error:      err.Error(),
+		Error:      err,
 	}
 	c.JSON(status, rd)
 }
