@@ -48,8 +48,7 @@ func (s *Server) RegisterUserHandler(c *gin.Context) {
 	resp, err := s.AuthService.CreateUser(c, user)
 	if err != nil {
 		// User creation failed
-		c.JSON(err.StatusCode,
-			err)
+		helper.BuildErrorResponse(c, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	// User created successfully
@@ -63,14 +62,14 @@ func (s *Server) RegisterUserHandler(c *gin.Context) {
 
 // SignInUserHandler Sign in user handler
 func (s *Server) SignInUserHandler(c *gin.Context) {
-	if s.AuthService == nil {
-		helper.BuildErrorResponse(c, http.StatusInternalServerError, "Internal server error", errors2.New("AuthService is not initialized"))
+	var user dto.LoginRequest
+	perr := helper.ParseRequestBody(c, &user)
+	if perr != nil {
 		return
 	}
-	var user dto.LoginRequest
 	resp, err := s.AuthService.Login(c, &user)
 	if err != nil {
-		c.JSON(err.StatusCode, err)
+		helper.BuildErrorResponse(c, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 	helper.BuildSuccessResponse(c, http.StatusOK, "User logged in successfully", resp)
@@ -91,7 +90,7 @@ func (s *Server) GetUserDetailsHandler(c *gin.Context) {
 	userID := c.GetString("USER_ID")
 	user, err := s.UserService.GetUserDetails(userID)
 	if err != nil {
-		c.JSON(err.StatusCode, err)
+		helper.BuildErrorResponse(c, err.StatusCode, err.Message, err.Error)
 		return
 	}
 	helper.BuildSuccessResponse(c, http.StatusOK, "User details retrieved successfully", user)
@@ -105,11 +104,7 @@ func (s *Server) UpdateUserDetailsHandler(c *gin.Context) {
 	var jsonData map[string]interface{}
 
 	if err := c.ShouldBindBodyWith(&jsonData, binding.JSON); err != nil {
-		c.JSON(http.StatusBadRequest, errors.ApiError{
-			Message:    "Invalid request",
-			Error:      err.Error(),
-			StatusCode: http.StatusBadRequest,
-		})
+		helper.BuildErrorResponse(c, http.StatusBadRequest, "Invalid request", err)
 		return
 	}
 
@@ -118,7 +113,7 @@ func (s *Server) UpdateUserDetailsHandler(c *gin.Context) {
 		case "first_name", "last_name", "email", "avatar":
 			continue
 		default:
-			helper.BuildErrorResponse(c, http.StatusBadRequest, "Invalid request", errors2.New("Invalid request"))
+			helper.BuildErrorResponse(c, http.StatusBadRequest, "Invalid request", errors2.New("invalid request"))
 			return
 		}
 	}
@@ -130,7 +125,7 @@ func (s *Server) UpdateUserDetailsHandler(c *gin.Context) {
 
 	userDetails, err := s.UserService.UpdateUserDetails(userID, &user)
 	if err != nil {
-		c.JSON(err.StatusCode, err)
+		helper.BuildErrorResponse(c, err.StatusCode, err.Message, err.Error)
 		return
 	}
 
@@ -148,7 +143,7 @@ func (s *Server) UpdateAvatarHandler(c *gin.Context) {
 
 	avatarUrl, err := s.UserService.UpdateAvatar(userID, file, c)
 	if err != nil {
-		c.JSON(err.StatusCode, err)
+		helper.BuildErrorResponse(c, err.StatusCode, err.Message, err.Error)
 		return
 	}
 
