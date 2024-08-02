@@ -21,6 +21,10 @@ func GenerateUserId() string {
 	return uuid.New().String()
 }
 
+func GenerateUUID() string {
+	return uuid.New().String()
+}
+
 func UploadImage(file any, user_id string, c *gin.Context) (string, error) {
 	cldApiKey := os.Getenv("CLOUDINARY_API_KEY")
 	cldApiSecret := os.Getenv("CLOUDINARY_API_SECRET")

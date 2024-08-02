@@ -16,6 +16,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// TODO: set up social logins
+// TODO: set up email verification
+// TODO: set up password reset
+// TODO: set up user roles
+// TODO: set up user permissions
 type AuthService interface {
 	CreateUser(c *gin.Context, user *dto.CreateUserRequest) (*dto.UserDetailsResponse, *errors.ApiError)
 	Login(c *gin.Context, user *dto.LoginRequest) (*dto.LoginResponse, *errors.ApiError)

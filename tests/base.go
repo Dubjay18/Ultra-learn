@@ -18,7 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func setupServer() *server.Server {
+func SetupServer() *server.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	dbInstance := database.New()
 	userRepo := repository.NewUserRepository(dbInstance.Db) // Pass the dbInstance to the UserRepository
@@ -75,7 +75,7 @@ func AssertValidationError(t *testing.T, response map[string]interface{}, field 
 func SignupUser(t *testing.T, r *gin.Engine, testServer *server.Server, userSignUpData dto.CreateUserRequest, admin bool) {
 
 	var (
-		signupPath = "/api/v1/auth/users/signup"
+		signupPath = "/api/v1/auth/register"
 		signupURI  = url.URL{Path: signupPath}
 	)
 
