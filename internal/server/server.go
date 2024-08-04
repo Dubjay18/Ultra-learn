@@ -1,6 +1,8 @@
 package server
 
 import (
+	"Ultra-learn/config"
+	"Ultra-learn/internal/logger"
 	"Ultra-learn/internal/repository"
 	"Ultra-learn/internal/services"
 	"fmt"
@@ -24,12 +26,12 @@ type Server struct {
 
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	dbInstance := database.New()
-
-	userRepo := repository.NewUserRepository(dbInstance.Db) // Pass the dbInstance to the UserRepository
-	authService := services.NewAuthService(userRepo)        // Pass the UserRepository to the AuthService
-	userService := services.NewUserService(userRepo)        // Pass the UserRepository to the UserService
-	emailService := services.NewEmailService()              // Pass the UserRepository to the EmailService
+	dbInstance := database.New(config.DatabaseName, config.DatabaseHost, config.DatabasePort)
+	logger.Init()
+	userRepo := repository.NewUserRepository(dbInstance) // Pass the dbInstance to the UserRepository
+	authService := services.NewAuthService(userRepo)     // Pass the UserRepository to the AuthService
+	userService := services.NewUserService(userRepo)     // Pass the UserRepository to the UserService
+	emailService := services.NewEmailService()           // Pass the UserRepository to the EmailService
 	NewServer := &Server{
 		Port:         port,
 		Db:           dbInstance,

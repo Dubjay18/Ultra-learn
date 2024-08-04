@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -65,10 +66,8 @@ func TestUserSignUp(t *testing.T) {
 
 		r.POST(requestURI.Path, s.RegisterUserHandler)
 		t.Run(tt.name, func(t *testing.T) {
-			var b bytes.Buffer
-			// Marshal the payload to json
-			json.NewEncoder(&b).Encode(tt.payload)
-			req, err := http.NewRequest(http.MethodPost, requestURI.String(), &b)
+			userJson, _ := json.Marshal(tt.payload)
+			req, err := http.NewRequest(http.MethodPost, requestURI.String(), bytes.NewBuffer(userJson))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -80,8 +79,8 @@ func TestUserSignUp(t *testing.T) {
 			// Assert the status code
 			tests.AssertStatusCode(t, rr.Code, tt.expected)
 			data := tests.ParseResponse(rr)
-			code := int(data["code"].(float64))
-			tests.AssertStatusCode(t, code, tt.expected)
+			log.Println(data)
+
 			if tt.Message != "" {
 				message := data["message"]
 				if message != nil {

@@ -5,7 +5,6 @@ import (
 	"Ultra-learn/internal/models"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type UserRepository interface {
@@ -16,7 +15,7 @@ type UserRepository interface {
 	UpdateAvatar(id string, avatar string) error
 }
 type DefaultUserRepository struct {
-	db *mongo.Client
+	db *database.Service
 }
 
 func (r *DefaultUserRepository) CreateUser(user *models.User) error {
@@ -86,7 +85,7 @@ func (r *DefaultUserRepository) UpdateAvatar(id string, avatar string) error {
 	return nil
 }
 
-func NewUserRepository(db *mongo.Client) *DefaultUserRepository {
+func NewUserRepository(db *database.Service) *DefaultUserRepository {
 	return &DefaultUserRepository{
 		db: db,
 	}

@@ -6,6 +6,7 @@ import (
 	"Ultra-learn/internal/helper"
 	"Ultra-learn/internal/logger"
 	errors2 "errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -45,10 +46,22 @@ func (s *Server) RegisterUserHandler(c *gin.Context) {
 	if perr != nil {
 		return
 	}
+
+	if !helper.IsValidEmail(user.Email) {
+		helper.BuildErrorResponse(c, http.StatusBadRequest, "Invalid email address", errors2.New("invalid email address"))
+		return
+	}
+
+	if ok, _ := s.AuthService.CheckIFUserExists(c, user.Email); ok {
+		helper.BuildErrorResponse(c, http.StatusBadRequest, "User already exists", errors2.New("user already exists"))
+		return
+	}
+
 	resp, err := s.AuthService.CreateUser(c, user)
 	if err != nil {
 		// User creation failed
 		helper.BuildErrorResponse(c, http.StatusInternalServerError, "Internal server error", err)
+		logger.Error(fmt.Sprintf("error: %v", err))
 		return
 	}
 	// User created successfully

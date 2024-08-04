@@ -3,32 +3,56 @@ package tests
 import (
 	"Ultra-learn/internal/database"
 	"Ultra-learn/internal/dto"
+	"Ultra-learn/internal/logger"
 	"Ultra-learn/internal/repository"
 	"Ultra-learn/internal/server"
 	"Ultra-learn/internal/services"
 	"bytes"
 	"encoding/json"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	_ "github.com/joho/godotenv/autoload"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
 	"strconv"
 	"testing"
-
-	"github.com/gin-gonic/gin"
 )
 
+func LoadEnv() {
+	err := godotenv.Load(".env") // adjust the path to your .env file if needed
+	if err != nil {
+		log.Fatalf("Error loading .env file" + err.Error())
+	}
+}
+
 func SetupServer() *server.Server {
+	if err := godotenv.Load("../.env"); err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+
+	}
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	dbInstance := database.New()
-	userRepo := repository.NewUserRepository(dbInstance.Db) // Pass the dbInstance to the UserRepository
-	authService := services.NewAuthService(userRepo)        // Pass the UserRepository to the AuthService
-	userService := services.NewUserService(userRepo)        // Assuming you have a function to create a new AuthService
+	log.Println("config", os.Getenv("DB_DATABASE"))
+	var (
+		databaseName = os.Getenv("DB_DATABASE")
+		dbport       = os.Getenv("DB_PORT")
+		dbhost       = os.Getenv("DB_HOST")
+	)
+	log.Println("PORT: ", port)
+	dbInstance := database.New(databaseName, dbhost, dbport)
+	logger.Init()
+	userRepo := repository.NewUserRepository(dbInstance) // Pass the dbInstance to the UserRepository
+	authService := services.NewAuthService(userRepo)     // Pass the UserRepository to the AuthService
+	userService := services.NewUserService(userRepo)     // Assuming you have a function to create a new AuthService
+	emailService := services.NewEmailService()
 	return &server.Server{
-		Port:        port,
-		Db:          dbInstance,
-		AuthService: authService,
-		UserService: userService,
+		Port:         port,
+		Db:           dbInstance,
+		AuthService:  authService,
+		UserService:  userService,
+		EmailService: emailService,
 	}
 }
 

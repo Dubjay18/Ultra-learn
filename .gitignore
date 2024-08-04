@@ -27,3 +27,5 @@ tmp/
 
 # Project build
 main
+logs/app_log.log
+internal/logger/logs
