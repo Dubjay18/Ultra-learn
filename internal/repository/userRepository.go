@@ -3,9 +3,12 @@ package repository
 import (
 	"Ultra-learn/internal/database"
 	"Ultra-learn/internal/models"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
+
+var ErrUserNotFound = errors.New("user not found")
 
 type UserRepository interface {
 	CreateUser(user *models.User) error
@@ -17,6 +20,7 @@ type UserRepository interface {
 type DefaultUserRepository struct {
 	db *database.Service
 }
+
 
 func (r *DefaultUserRepository) CreateUser(user *models.User) error {
 	err := database.InsertOne(r.db, "users", user)

@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/markbates/goth/gothic"
 )
 
 func (s *Server) healthHandler(c *gin.Context) {
@@ -161,4 +162,22 @@ func (s *Server) UpdateAvatarHandler(c *gin.Context) {
 	}
 
 	helper.BuildSuccessResponse(c, http.StatusOK, "Avatar updated successfully", avatarUrl)
+}
+func (s *Server)  SocialauthHandler(c *gin.Context) {
+	gothic.BeginAuthHandler(c.Writer, c.Request)
+}
+func (s *Server) authCallback(c *gin.Context) {
+	user, err := gothic.CompleteUserAuth(c.Writer, c.Request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// Handle user creation or login via AuthService
+	loginResponse, err := s.AuthService.SocialLogin(c, user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+helper.BuildSuccessResponse(c, http.StatusOK, "User logged in successfully", loginResponse)
 }
