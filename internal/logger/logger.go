@@ -20,9 +20,10 @@ func Init() {
 	zapConfig.Development = config.IS_DEVELOP_MODE
 	zapConfig.Encoding = "json"
 	zapConfig.InitialFields = map[string]interface{}{"idtx": "999"}
-	zapConfig.OutputPaths = []string{"stdout", config.APP_LOG_FOLDER + "app_log.log"}
-	zapConfig.ErrorOutputPaths = []string{"stderr"}
+	//zapConfig.OutputPaths = []string{"stdout", config.APP_LOG_FOLDER + "app_log.log"}
+	//zapConfig.ErrorOutputPaths = []string{"stderr"}
 	log, err = zapConfig.Build(zap.AddCallerSkip(1))
+	defer log.Sync()
 	//log, err = zap.NewProduction()
 	if err != nil {
 		panic(err)

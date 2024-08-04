@@ -6,10 +6,12 @@ import (
 	"Ultra-learn/internal/helper"
 	"Ultra-learn/internal/logger"
 	errors2 "errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/markbates/goth/gothic"
 )
 
 func (s *Server) healthHandler(c *gin.Context) {
@@ -45,10 +47,22 @@ func (s *Server) RegisterUserHandler(c *gin.Context) {
 	if perr != nil {
 		return
 	}
+
+	if !helper.IsValidEmail(user.Email) {
+		helper.BuildErrorResponse(c, http.StatusBadRequest, "Invalid email address", errors2.New("invalid email address"))
+		return
+	}
+
+	if ok, _ := s.AuthService.CheckIFUserExists(c, user.Email); ok {
+		helper.BuildErrorResponse(c, http.StatusBadRequest, "User already exists", errors2.New("user already exists"))
+		return
+	}
+
 	resp, err := s.AuthService.CreateUser(c, user)
 	if err != nil {
 		// User creation failed
 		helper.BuildErrorResponse(c, http.StatusInternalServerError, "Internal server error", err)
+		logger.Error(fmt.Sprintf("error: %v", err))
 		return
 	}
 	// User created successfully
@@ -148,4 +162,22 @@ func (s *Server) UpdateAvatarHandler(c *gin.Context) {
 	}
 
 	helper.BuildSuccessResponse(c, http.StatusOK, "Avatar updated successfully", avatarUrl)
+}
+func (s *Server)  SocialauthHandler(c *gin.Context) {
+	gothic.BeginAuthHandler(c.Writer, c.Request)
+}
+func (s *Server) authCallback(c *gin.Context) {
+	user, err := gothic.CompleteUserAuth(c.Writer, c.Request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// Handle user creation or login via AuthService
+	loginResponse, err := s.AuthService.SocialLogin(c, user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+helper.BuildSuccessResponse(c, http.StatusOK, "User logged in successfully", loginResponse)
 }

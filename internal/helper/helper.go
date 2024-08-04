@@ -5,17 +5,16 @@ import (
 	"Ultra-learn/internal/errors"
 	"Ultra-learn/internal/logger"
 	"fmt"
-	"log"
-	"net/http"
-	"os"
-	"strings"
-
 	"github.com/cloudinary/cloudinary-go"
 	"github.com/cloudinary/cloudinary-go/api/uploader"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/iancoleman/strcase"
+	"log"
+	"net/http"
+	"os"
+	"strings"
 )
 
 func GenerateUserId() string {
@@ -70,6 +69,7 @@ func ParseRequestBody(c *gin.Context, req interface{}) any {
 		}
 		return bindErr
 	}
+	logger.Info("Request body parsed successfully")
 	return nil
 }
 
@@ -95,9 +95,9 @@ func BuildSuccessResponse(c *gin.Context, status int, message string, data any) 
 	c.JSON(status, rd)
 }
 
-func BuildErrorResponse(c *gin.Context, status int, message string, err interface{}) {
+func BuildErrorResponse(c *gin.Context, status int, message string, err any) {
 	if status == http.StatusInternalServerError {
-		logger.Error(err.(error).Error())
+		log.Println(err)
 	}
 	rd := errors.ApiError{
 		Message:    message,
@@ -112,4 +112,8 @@ func GetUserRole(c *gin.Context) string {
 	// Example: get the role from the session
 	role := c.GetString("role")
 	return role
+}
+
+func IsValidEmail(email string) bool {
+	return strings.Contains(email, "@") && strings.Contains(email, ".")
 }

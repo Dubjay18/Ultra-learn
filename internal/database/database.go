@@ -1,10 +1,10 @@
 package database
 
 import (
+	"Ultra-learn/config"
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -13,27 +13,30 @@ import (
 )
 
 type Service struct {
-	Db *mongo.Client
+	Db *mongo.Database
 }
 
 var (
-	DatabaseName = os.Getenv("DB_DATABASE")
-	password     = os.Getenv("DB_PASSWORD")
-	username     = os.Getenv("DB_USERNAME")
-	port         = os.Getenv("DB_PORT")
-	host         = os.Getenv("DB_HOST")
+	DatabaseName = config.DatabaseName
+	password     = config.DatabasePassword
+	username     = config.DatabaseUsername
+	port         = config.DatabasePort
+	host         = config.DatabaseHost
 	dbInstance   *Service
 )
 
-func New() *Service {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", host, port)))
+func New(dbName string, dbHost string, dbPort string) *Service {
+	log.Println("Connecting to database")
+	connectionString := fmt.Sprintf("mongodb://%s:%s/%s", dbHost, dbPort, dbName)
+	log.Println(connectionString)
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(connectionString))
 	if err != nil {
 		log.Fatal(err)
 
 	}
 	// Reuse Connection
 	dbInstance = &Service{
-		Db: client,
+		Db: client.Database(dbName),
 	}
 	return dbInstance
 }
@@ -42,7 +45,7 @@ func (s *Service) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
-	err := s.Db.Ping(ctx, nil)
+	err := s.Db.Client().Ping(ctx, nil)
 	if err != nil {
 		log.Fatalf(fmt.Sprintf("db down: %v", err))
 	}

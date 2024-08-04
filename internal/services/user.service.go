@@ -33,7 +33,7 @@ func (s *DefaultUserService) GetUserDetails(id string) (*dto.UserDetailsResponse
 		return nil, &errors.ApiError{
 			Message:    errors.UserNotFound,
 			StatusCode: http.StatusNotFound,
-			Error:      err.Error(),
+			Error:      err,
 		}
 	}
 	return &dto.UserDetailsResponse{
@@ -59,7 +59,7 @@ func (s *DefaultUserService) UpdateUserDetails(id string, user *dto.UpdateUserRe
 		return nil, &errors.ApiError{
 			Message:    errors.UserNotFound,
 			StatusCode: http.StatusNotFound,
-			Error:      err.Error(),
+			Error:      err,
 		}
 	}
 	if user.FirstName != "" {
@@ -74,7 +74,7 @@ func (s *DefaultUserService) UpdateUserDetails(id string, user *dto.UpdateUserRe
 		return nil, &errors.ApiError{
 			Message:    errors.InternalServerError,
 			StatusCode: http.StatusInternalServerError,
-			Error:      err.Error(),
+			Error:      err,
 		}
 	}
 	return &dto.UserDetailsResponse{
@@ -106,7 +106,7 @@ func (s *DefaultUserService) UpdateAvatar(id string, file any, c *gin.Context) (
 		return "", &errors.ApiError{
 			Message:    errors.InternalServerError,
 			StatusCode: http.StatusInternalServerError,
-			Error:      err.Error(),
+			Error:      err,
 		}
 	}
 	err = s.repo.UpdateAvatar(id, result)
@@ -114,7 +114,7 @@ func (s *DefaultUserService) UpdateAvatar(id string, file any, c *gin.Context) (
 		return "", &errors.ApiError{
 			Message:    errors.InternalServerError,
 			StatusCode: http.StatusInternalServerError,
-			Error:      err.Error(),
+			Error:      err,
 		}
 	}
 	return result, nil

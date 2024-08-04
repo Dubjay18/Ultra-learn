@@ -7,11 +7,14 @@ import (
 	"Ultra-learn/internal/repository"
 	errors2 "errors"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	"os"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
+	"github.com/markbates/goth"
+	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // TODO: set up social logins
@@ -22,6 +25,8 @@ import (
 type AuthService interface {
 	CreateUser(c *gin.Context, user *dto.CreateUserRequest) (*dto.UserDetailsResponse, error)
 	Login(c *gin.Context, user *dto.LoginRequest) (*dto.LoginResponse, error)
+	CheckIFUserExists(c *gin.Context, email string) (bool, error)
+	SocialLogin(c *gin.Context, user goth.User) (*dto.LoginResponse, error)
 }
 
 type DefaultAuthService struct {
@@ -57,21 +62,6 @@ func GenerateJWT(userID string, role int) (string, error) {
 }
 
 func (a *DefaultAuthService) CreateUser(c *gin.Context, user *dto.CreateUserRequest) (*dto.UserDetailsResponse, error) {
-	// Get the user data from the request
-	//if err := c.ShouldBindJSON(&user); err != nil {
-	//
-	//	return &errors.ApiError{
-	//		Message:    errors.ValidationError,
-	//		StatusCode: http.StatusBadRequest,
-	//		Error:      err.Error(),
-	//	}
-	//}
-	// Hash the user's password
-	//check if user already exists
-	_, err := a.repo.GetUserByEmail(user.Email)
-	if err == nil {
-		return nil, err
-	}
 	hash, err := hashPassword(user.Password)
 	if err != nil {
 		return nil, err
@@ -108,13 +98,61 @@ func (a *DefaultAuthService) Login(c *gin.Context, user *dto.LoginRequest) (*dto
 	}
 	// Verify the user's password
 	if !verifyPassword(user.Password, u.Password) {
-		return nil, errors2.New("Invalid password or email")
+		return nil, errors2.New("invalid password or email")
 	}
 	// Generate a JWT token
 	token, err := GenerateJWT(u.ID, u.Role)
 	if err != nil {
 		return nil, err
 	}
+	return &dto.LoginResponse{Token: token}, nil
+}
+
+func (a *DefaultAuthService) CheckIFUserExists(c *gin.Context, email string) (bool, error) {
+	_, err := a.repo.GetUserByEmail(email)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+
+}
+func (a *DefaultAuthService) SocialLogin(c *gin.Context, user goth.User) (*dto.LoginResponse, error) {
+	// Check if the user already exists by email
+	exists, err := a.CheckIFUserExists(c, user.Email)
+	if err != nil && !errors2.Is(err, mongo.ErrNoDocuments) {
+		return nil, err
+	}
+
+	var u *models.User
+	if !exists {
+		// Create a new user if not found
+		u = &models.User{
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			Email:     user.Email,
+			Avatar:    user.AvatarURL,
+			Role:      dto.RoleUser,
+			ID:        helper.GenerateUserId(),
+			Provider:  user.Provider,
+		}
+
+		if err := a.repo.CreateUser(u); err != nil {
+			return nil, err
+		}
+	} else {
+		// Fetch the user if they already exist
+		u, err = a.repo.GetUserByEmail(user.Email)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Generate a JWT token for the user
+	token, err := GenerateJWT(u.ID, u.Role)
+	if err != nil {
+		return nil, err
+	}
+
 	return &dto.LoginResponse{Token: token}, nil
 }
 
