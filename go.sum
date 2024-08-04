@@ -1,3 +1,7 @@
+cloud.google.com/go/compute v1.20.1 h1:6aKEtlUiwEpJzM001l0yFkpXmUVXaN8W+fbkb2AZNbg=
+cloud.google.com/go/compute v1.20.1/go.mod h1:4tCnrn48xsqlwSAiLf1HXMQk8CONslYbdiEZc9FEIbM=
+cloud.google.com/go/compute/metadata v0.2.3 h1:mg4jlk7mCAj6xXp9UJ4fjI9VUI5rubuGBW5aJ7UnBMY=
+cloud.google.com/go/compute/metadata v0.2.3/go.mod h1:VAV5nSsACxMJvgaAuX6Pk2AawlZn8kiOGuCv6gTkwuA=
 github.com/SlyMarbo/gmail v0.0.0-20170317233059-3ec3141ee13b h1:z8jRcfsRXi4gmL85SPQvgafFRUvR5k0LPU4RUSPpvro=
 github.com/SlyMarbo/gmail v0.0.0-20170317233059-3ec3141ee13b/go.mod h1:rmnWBw/y22Ohv+uLY5cBZCa620ZH/ID3TehrUssWHWA=
 github.com/bytedance/sonic v1.11.8 h1:Zw/j1KfiS+OYTi9lyB3bb0CFxPJVkM17k1wyDG32LRA=
